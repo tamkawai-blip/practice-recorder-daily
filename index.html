@@ -360,8 +360,39 @@
             margin-top: 20px;
         }
 
+        .stats-dashboard {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            background: var(--primary-light);
+            padding: 15px;
+            border-radius: 12px;
+            justify-content: space-around;
+            text-align: center;
+            border: 1px solid #b2f5ea;
+        }
+
+        .stat-item {
+            flex: 1;
+        }
+
+        .stat-val {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .stat-lbl {
+            font-size: 0.8rem;
+            color: #4a5568;
+            font-weight: 600;
+        }
+
         .history-list {
             margin-top: 15px;
+            max-height: 350px;
+            overflow-y: auto;
+            padding-right: 5px;
         }
 
         .history-item {
@@ -373,10 +404,17 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            transition: all 0.2s;
+        }
+
+        .history-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
         }
 
         .history-info h4 {
-            margin: 0 0 5px 0;
+            margin: 0;
             color: var(--dark);
         }
 
@@ -386,9 +424,25 @@
             color: #718096;
         }
 
+        .history-date-badge {
+            align-self: flex-start;
+            font-size: 0.75rem;
+            background: #cbd5e0;
+            color: #4a5568;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .history-date-badge.today {
+            background: var(--primary);
+            color: var(--white);
+        }
+
         .history-stars {
             color: #f6e05e;
             font-size: 1.1rem;
+            white-space: nowrap;
         }
 
         .no-records {
@@ -564,9 +618,23 @@
 
     <!-- 歷史紀錄 -->
     <div class="card history-card">
-        <h3 class="card-title">🏆 今天的練習紀錄 (本地儲存)</h3>
+        <h3 class="card-title">🏆 我的練習歷史紀錄 (本地儲存)</h3>
+
+        <!-- 我的成就統計面板 -->
+        <div id="statsDashboard" class="stats-dashboard" style="display: none;">
+            <div class="stat-item">
+                <div class="stat-val" id="statDays">0</div>
+                <div class="stat-lbl">📆 累計練習天數</div>
+            </div>
+            <div style="border-left: 1px solid #b2f5ea;"></div>
+            <div class="stat-item">
+                <div class="stat-val" id="statMinutes">0</div>
+                <div class="stat-lbl">⏱️ 累計練習分鐘</div>
+            </div>
+        </div>
+
         <div id="historyList" class="history-list">
-            <!-- 歷史紀錄 -->
+            <!-- 歷史紀錄將在這裡渲染 -->
         </div>
     </div>
 </div>
@@ -615,14 +683,12 @@
             const osc = audioCtx.createOscillator();
             const gainNode = audioCtx.createGain();
 
-            // 使用三角波模擬牧童笛較柔和、少諧音的音色
             osc.type = 'triangle';
             osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
 
-            // 漸入與漸出，避免點擊有啪嗒雜音
             gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-            gainNode.gain.linearRampToValueAtTime(0.15, audioCtx.currentTime + 0.05); // 音量
-            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.6); // 0.6秒後淡出
+            gainNode.gain.linearRampToValueAtTime(0.15, audioCtx.currentTime + 0.05); 
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.6); 
 
             osc.connect(gainNode);
             gainNode.connect(audioCtx.destination);
@@ -641,62 +707,50 @@
         const data = recorderData[noteKey];
         if (!data) return;
 
-        // A. 更新文字提示
         document.getElementById('fingeringTip').innerHTML = `<strong>${noteKey} (${data.name}) 指法：</strong><br>${data.tip}`;
 
-        // B. 更新五線譜 SVG
         const noteHead = document.getElementById('noteHead');
         const noteStem = document.getElementById('noteStem');
         const ledgerLine = document.getElementById('ledgerLine');
         const sharpSign = document.getElementById('sharpSign');
 
-        // 更新音符頭中心 Y 座標
         noteHead.setAttribute('cy', data.y);
         noteHead.setAttribute('transform', `rotate(-15, 120, ${data.y})`);
 
-        // 更新輔助下加一線 (C4 專用)
         if (data.ledger) {
             ledgerLine.style.display = 'block';
         } else {
             ledgerLine.style.display = 'none';
         }
 
-        // 更新升記號 (#) 顯示與位置
         if (data.sharp) {
             sharpSign.style.display = 'block';
-            sharpSign.setAttribute('y', data.y + 8); // 微調以垂直居中對齊音符頭
+            sharpSign.setAttribute('y', data.y + 8); 
         } else {
             sharpSign.style.display = 'none';
         }
 
-        // 更新符桿方向
         if (data.stemUp) {
-            // 符桿朝上：在右側，往上延伸 32px
             noteStem.setAttribute('x1', '126');
             noteStem.setAttribute('y1', data.y);
             noteStem.setAttribute('x2', '126');
             noteStem.setAttribute('y2', data.y - 32);
         } else {
-            // 符桿朝下：在左側，往下延伸 32px
             noteStem.setAttribute('x1', '114');
             noteStem.setAttribute('y1', data.y);
             noteStem.setAttribute('x2', '114');
             noteStem.setAttribute('y2', data.y + 32);
         }
 
-        // C. 更新牧童笛指法孔 SVG
         for (let i = 0; i <= 7; i++) {
             const hole = document.getElementById(`hole${i}`);
             const state = data.holes[i];
 
             if (state === 1) {
-                // 完全按住 (黑色)
                 hole.setAttribute('fill', '#333');
             } else if (state === 0.5) {
-                // 半按孔 (高音 E5 背面孔)
                 hole.setAttribute('fill', 'url(#halfGrad)');
             } else {
-                // 放開 (白色)
                 hole.setAttribute('fill', '#fff');
             }
         }
@@ -713,22 +767,19 @@
         btn.className = `note-btn ${note === firstNote ? 'active' : ''}`;
         btn.innerText = note;
         btn.addEventListener('click', () => {
-            // 切換 active 狀態
             document.querySelectorAll('.note-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
 
-            // 播放聲音與更新
             playTone(recorderData[note].hz);
             updateVisualizer(note);
         });
         noteSelector.appendChild(btn);
     });
 
-    // 初始渲染 C4 指法
     updateVisualizer(firstNote);
 
     // ==========================================
-    // 6. 錄音功能實現 (Web Audio + MediaRecorder)
+    // 6. 錄音功能實現 (Web Audio + MediaRecorder) - 針對 iOS / iPad 進行優化
     // ==========================================
     let mediaRecorder;
     let audioChunks = [];
@@ -739,32 +790,68 @@
     const statusText = document.getElementById('statusText');
 
     startBtn.addEventListener('click', async () => {
+        const userConfirm = confirm(
+            "🎙️ 準備好要錄音了嗎？\n\n" +
+            "【重要提示】\n" +
+            "1. 點擊「確定」後，瀏覽器通常會彈出「要求使用麥克風」的視窗。\n" +
+            "2. 請務必選擇「允許」(Allow)，這樣才能聽到你吹出的優美笛聲唷！\n" +
+            "3. 如果是 iPad/iPhone，請確保機身沒有開啟「靜音模式」，音量已調高。\n\n" +
+            "準備好請按「確定」！"
+        );
+
+        if (!userConfirm) {
+            return; 
+        }
+
         try {
+            audioChunks = []; 
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            mediaRecorder = new MediaRecorder(stream);
+
+            let recorderOptions = {};
+            if (typeof MediaRecorder.isTypeSupported === 'function') {
+                if (MediaRecorder.isTypeSupported('audio/mp4')) {
+                    recorderOptions = { mimeType: 'audio/mp4' };
+                } else if (MediaRecorder.isTypeSupported('audio/aac')) {
+                    recorderOptions = { mimeType: 'audio/aac' };
+                } else if (MediaRecorder.isTypeSupported('audio/webm')) {
+                    recorderOptions = { mimeType: 'audio/webm' };
+                }
+            }
+
+            mediaRecorder = new MediaRecorder(stream, recorderOptions);
 
             mediaRecorder.ondataavailable = event => {
-                audioChunks.push(event.data);
+                if (event.data && event.data.size > 0) {
+                    audioChunks.push(event.data);
+                }
             };
 
             mediaRecorder.onstop = () => {
-                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                const finalMimeType = mediaRecorder.mimeType || 'audio/mp4';
+                const audioBlob = new Blob(audioChunks, { type: finalMimeType });
                 const audioUrl = URL.createObjectURL(audioBlob);
                 audioPlayback.src = audioUrl;
-                audioChunks = []; // 釋放內存
+
+                stream.getTracks().forEach(track => track.stop());
 
                 statusDot.classList.remove('active');
                 statusText.innerText = "⏺️ 錄音已完成！可以點下方播放聽聽看";
             };
 
-            mediaRecorder.start();
+            mediaRecorder.start(1000); 
             startBtn.disabled = true;
             stopBtn.disabled = false;
             statusDot.classList.add('active');
-            statusText.innerText = "🔴 正在錄音中...請開始吹奏...";
+            statusText.innerText = "🔴 正在錄音中...請開始吹奏...🗣️";
         } catch (err) {
-            alert("🔒 無法開啟麥克風。請確保你已給予網頁麥克風的使用權限。");
-            console.log(err);
+            alert(
+                "🔒 無法開啟麥克風。\n\n" +
+                "排查小貼士：\n" +
+                "1. 請檢查是否不小心按了「拒絕」？請重新整理網頁，並點擊「允許」。\n" +
+                "2. 檢查 iPad 的「設定」 > 「Safari」 > 「麥克風」，確保其權限為「允許」或「詢問」。\n" +
+                "3. 本系統錄音功能在 HTTPS 安全連線環境下才能正常運作。"
+            );
+            console.error(err);
         }
     });
 
@@ -778,7 +865,7 @@
     });
 
     // ==========================================
-    // 7. 本地歷史紀錄 (防止修改日期，且每天只能提交當天)
+    // 7. 本地歷史紀錄 (全新升級：顯示所有紀錄，防止修改)
     // ==========================================
     const STORAGE_KEY = 'recorder_logs_v1';
 
@@ -789,84 +876,63 @@
 
     function saveLog(log) {
         const logs = getLogs();
-        logs.unshift(log); // 最新紀錄排在最前
+        logs.unshift(log); 
         localStorage.setItem(STORAGE_KEY, JSON.stringify(logs));
     }
 
     function renderHistory() {
         const historyList = document.getElementById('historyList');
+        const statsDashboard = document.getElementById('statsDashboard');
         const logs = getLogs();
 
-        // 只過濾出符合今日日期的紀錄，用來展示今日打卡成就
-        const todayLogs = logs.filter(item => item.date === dateStr);
-
-        if (todayLogs.length === 0) {
-            historyList.innerHTML = '<div class="no-records">今日尚未有練習紀錄，快點練習並提交吧！🌟</div>';
+        if (logs.length === 0) {
+            statsDashboard.style.display = 'none';
+            historyList.innerHTML = '<div class="no-records">你還沒有任何練習紀錄唷！快完成今天的第一次練習吧！🌟</div>';
             return;
         }
 
-        historyList.innerHTML = todayLogs.map(item => `
-            <div class="history-item">
-                <div class="history-info">
-                    <h4>⏱️ 練習了 ${item.duration} 分鐘</h4>
-                    <p>🎯 練習內容：${escapeHtml(item.content)}</p>
+        // 1. 計算並更新統計面板
+        statsDashboard.style.display = 'flex';
+        const uniqueDays = new Set(logs.map(item => item.date)).size;
+        const totalMinutes = logs.reduce((sum, item) => sum + item.duration, 0);
+        document.getElementById('statDays').innerText = uniqueDays;
+        document.getElementById('statMinutes').innerText = totalMinutes;
+
+        // 2. 渲染完整的練習歷史清單 (最新的在最前)
+        historyList.innerHTML = logs.map(item => {
+            const isToday = item.date === dateStr;
+            const stars = '★'.repeat(item.rating) + '☆'.repeat(5 - item.rating);
+            return `
+                <div class="history-item" style="${isToday ? 'border-left-color: var(--primary);' : 'border-left-color: #a0aec0; opacity: 0.9;'}">
+                    <div class="history-info">
+                        <span class="history-date-badge ${isToday ? 'today' : ''}">
+                            ${item.date} ${isToday ? '🔥 今日練習' : '📅 往日回顧'}
+                        </span>
+                        <h4 style="margin: 4px 0;">⏱️ 練習了 ${item.duration} 分鐘</h4>
+                        <p style="margin: 0; font-size: 0.9rem;">📝 ${escapeHTML(item.content)}</p>
+                    </div>
+                    <div class="history-stars">${stars}</div>
                 </div>
-                <div class="history-stars">
-                    ${'★'.repeat(item.rating)}${'☆'.repeat(5 - item.rating)}
-                </div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
     }
 
-    function escapeHtml(text) {
-        return text
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;");
+    function escapeHTML(str) {
+        return str.replace(/[&<>'"]/g, 
+            tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+        );
     }
 
-    // 表單提交處理
+    // ==========================================
+    // 8. 表單提交事件 (防作弊：限制每日只能提交一次)
+    // ==========================================
     document.getElementById('recordForm').addEventListener('submit', (e) => {
         e.preventDefault();
 
-        const duration = parseInt(document.getElementById('practiceTime').value);
-        const content = document.getElementById('practiceContent').value;
-        const rating = parseInt(document.querySelector('input[name="rating"]:checked').value);
+        const duration = parseInt(document.getElementById('practiceTime').value, 10);
+        const content = document.getElementById('practiceContent').value.trim();
+        const ratingInput = document.querySelector('input[name="rating"]:checked');
 
-        // 嚴格檢驗練習時間 (5 分鐘至 2 小時/120分鐘)
-        if (duration < 5 || duration > 120) {
-            alert("⚠️ 錯誤：每次登記的練習時間必須在 5 至 120 分鐘之間！");
-            return;
-        }
-
-        // 保存紀錄
-        const newLog = {
-            date: dateStr,
-            duration: duration,
-            content: content,
-            rating: rating,
-            timestamp: Date.now()
-        };
-
-        saveLog(newLog);
-        alert(`🎉 恭喜你完成今天的練習！\n日期：${dateStr}\n時長：${duration} 分鐘\n\n老師已收到你的星級記錄，明天要繼續保持唷！`);
-
-        // 重置表單 (除了唯讀日期)
-        document.getElementById('practiceTime').value = '';
-        document.getElementById('practiceContent').value = '';
-        document.querySelectorAll('input[name="rating"]').forEach(el => el.checked = false);
-        audioPlayback.src = '';
-        startBtn.innerText = "🔴 開始錄音";
-        statusText.innerText = "🎙️ 錄下我的演奏 (可選填)";
-
-        renderHistory();
-    });
-
-    // 頁面加載時先渲染歷史紀錄
-    renderHistory();
-</script>
-
-</body>
-</html>
+        // 時間驗證
+        if (isNaN(duration) || duration < 5 || duration > 120) {
+            alert("⚠️ 練習時間必須在 5 到
