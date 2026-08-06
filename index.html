@@ -963,48 +963,94 @@
             .replace(/'/g, "&#039;");
     }
 
-    document.getElementById('recordForm').addEventListener('submit', (e) => {
-        e.preventDefault();
+   // ⚠️ 請替換為你剛部署獲得的 Google Apps Script Web App URL
+const GAS_WEB_APP_URL = "https://script.google.com/macros/s/YOUR_GAS_DEPLOYMENT_ID/exec";
 
-        const duration = parseInt(document.getElementById('practiceTime').value);
-        const content = document.getElementById('practiceContent').value;
-        const ratingInput = document.querySelector('input[name="rating"]:checked');
+// 輔助函式：將 Blob 音訊轉為 Base64 字串
+function blobToBase64(blob) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            const base64String = reader.result.split(',')[1];
+            resolve(base64String);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+    });
+}
 
-        if (!ratingInput) {
-            alert("⚠️ 請先自評今天表現（點選星星）！");
-            return;
+// 修改後的表單提交處理
+document.getElementById('recordForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const submitBtn = document.querySelector('.btn-submit');
+    const duration = parseInt(document.getElementById('practiceTime').value);
+    const content = document.getElementById('practiceContent').value;
+    const ratingInput = document.querySelector('input[name="rating"]:checked');
+
+    if (!ratingInput) {
+        alert("⚠️ 請先自評今天表現（點選星星）！");
+        return;
+    }
+
+    // 變更按鈕狀態，避免重複提交
+    submitBtn.disabled = true;
+    submitBtn.innerText = "⏳ 正在傳送紀錄至 Google Sheets...";
+
+    try {
+        let base64Audio = null;
+        let mimeType = "audio/mp4";
+
+        // 檢查是否有錄音檔
+        if (audioChunks.length > 0) {
+            const audioBlob = new Blob(audioChunks, { type: mediaRecorder ? mediaRecorder.mimeType : 'audio/mp4' });
+            base64Audio = await blobToBase64(audioBlob);
+            mimeType = audioBlob.type;
         }
-        const rating = parseInt(ratingInput.value);
 
-        if (duration < 5 || duration > 120) {
-            alert("⚠️ 練習時間必須在 5 至 120 分鐘之間！");
-            return;
-        }
-
-        const newLog = {
+        // 打包數據
+        const payload = {
             date: dateStr,
             duration: duration,
             content: content,
-            rating: rating,
-            timestamp: Date.now()
+            rating: parseInt(ratingInput.value),
+            audioBase64: base64Audio,
+            mimeType: mimeType
         };
 
-        saveLog(newLog);
-        alert(`🎉 恭喜你完成今天的練習！\n日期：${dateStr}\n時長：${duration} 分鐘\n\n老師已收到你的星級記錄，明天要繼續保持唷！`);
+        // 發送 POST 請求至 Google Apps Script
+        const response = await fetch(GAS_WEB_APP_URL, {
+            method: 'POST',
+            mode: 'no-cors', // 避免跨域阻擋
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
 
-        // 重置
+        alert("🎉 提交成功！你的練習紀錄與錄音已成功匯總至老師的 Google Sheets！");
+
+        // 儲存至本地歷史紀錄
+        saveLog({
+            date: dateStr,
+            duration: duration,
+            content: content,
+            rating: parseInt(ratingInput.value),
+            timestamp: Date.now()
+        });
+        renderHistory();
+
+        // 重置表單
         document.getElementById('practiceTime').value = '';
         document.getElementById('practiceContent').value = '';
         document.querySelectorAll('input[name="rating"]').forEach(el => el.checked = false);
         audioPlayback.src = '';
-        startBtn.innerText = "🔴 開始錄音";
-        statusText.innerText = "🎙️ 錄下我的演奏 (選填)";
+        audioChunks = [];
 
-        renderHistory();
-    });
+    } catch (err) {
+        console.error("提交失敗:", err);
+        alert("❌ 傳送失敗，請檢查網路連線或稍後再試！");
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerText = "✅ 提交今日練習";
+    }
+});
 
-    renderHistory();
-</script>
-
-</body>
-</html>
