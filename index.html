@@ -649,8 +649,8 @@
 </div>
 
 <script>
-    // ⚠️【請將下方網址替換為你在第三步獲得的 Google Apps Script 網址】
-    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/YOUR_GAS_DEPLOYMENT_ID/exec";
+    // 已為你更新為正式部署的 /exec Web App 網址
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyrk65u2OUv0GrLwU6qK-k7TVLGqJh2lJXclSBaCT4/exec";
 
     // ==========================================
     // 1. 初始化今日日期 (固定鎖定)
@@ -892,22 +892,31 @@
     }
 
     function escapeHtml(text) {
-        return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        return text
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
     }
+
+    // 初始載入歷史紀錄
     renderHistory();
 
-    // ==========================================
-    // 5. 數據傳送至 Google Sheets (含 Base64 錄音)
-    // ==========================================
+    // 輔助函式：將 Blob 音訊轉為 Base64 字串
     function blobToBase64(blob) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result.split(',')[1]);
+            reader.onloadend = () => {
+                const base64String = reader.result.split(',')[1];
+                resolve(base64String);
+            };
             reader.onerror = reject;
             reader.readAsDataURL(blob);
         });
     }
 
+    // 表單提交處理 (連結 Google Apps Script)
     document.getElementById('recordForm').addEventListener('submit', async (e) => {
         e.preventDefault();
 
@@ -921,11 +930,7 @@
             return;
         }
 
-        if (GAS_WEB_APP_URL.includes("YOUR_GAS_DEPLOYMENT_ID")) {
-            alert("⚠️ 請先在 index.html 內把 GAS_WEB_APP_URL 替換為你的 Google Apps Script 網址！");
-            return;
-        }
-
+        // 變更按鈕狀態，避免重複提交
         submitBtn.disabled = true;
         submitBtn.innerText = "⏳ 正在傳送紀錄至 Google Sheets...";
 
@@ -933,11 +938,13 @@
             let base64Audio = null;
             let mimeType = "audio/mp4";
 
+            // 檢查是否有錄音檔
             if (recordedAudioBlob) {
                 base64Audio = await blobToBase64(recordedAudioBlob);
-                mimeType = recordedAudioBlob.type;
+                mimeType = recordedAudioBlob.type || "audio/mp4";
             }
 
+            // 打包數據
             const payload = {
                 date: dateStr,
                 duration: duration,
@@ -947,15 +954,17 @@
                 mimeType: mimeType
             };
 
+            // 發送 POST 請求至 Google Apps Script
             await fetch(GAS_WEB_APP_URL, {
                 method: 'POST',
-                mode: 'no-cors',
+                mode: 'no-cors', // 避免跨域阻擋
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
 
-            alert("🎉 提交成功！你的練習紀錄與錄音已成功傳送至老師的 Google Sheets！");
+            alert("🎉 提交成功！你的練習紀錄與錄音已成功匯總至老師的 Google Sheets！");
 
+            // 儲存至本地歷史紀錄
             saveLog({
                 date: dateStr,
                 duration: duration,
@@ -965,11 +974,13 @@
             });
             renderHistory();
 
+            // 重置表單
             document.getElementById('practiceTime').value = '';
             document.getElementById('practiceContent').value = '';
             document.querySelectorAll('input[name="rating"]').forEach(el => el.checked = false);
             audioPlayback.src = '';
             recordedAudioBlob = null;
+            audioChunks = [];
 
         } catch (err) {
             console.error("提交失敗:", err);
@@ -980,5 +991,6 @@
         }
     });
 </script>
+
 </body>
 </html>
