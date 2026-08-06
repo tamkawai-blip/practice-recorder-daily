@@ -55,7 +55,6 @@
             font-size: 1rem;
         }
 
-        /* 雙欄佈局 */
         .grid-layout {
             display: grid;
             grid-template-columns: 1fr;
@@ -88,9 +87,17 @@
             padding-bottom: 10px;
         }
 
-        /* 表單樣式 */
         .form-group {
             margin-bottom: 18px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 12px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
         }
 
         label {
@@ -131,7 +138,6 @@
             margin-top: 4px;
         }
 
-        /* 星星自評 */
         .star-rating {
             display: flex;
             flex-direction: row-reverse;
@@ -159,7 +165,6 @@
             text-shadow: 0 0 4px rgba(246, 224, 94, 0.5);
         }
 
-        /* 錄音器樣式 (iPad 特優化) */
         .recorder-box {
             background: #ebf8fa;
             border: 2px dashed #b2f5ea;
@@ -224,10 +229,6 @@
             color: var(--white);
         }
 
-        .btn-record:active {
-            background-color: #c53030;
-        }
-
         .btn-stop {
             background-color: #4a5568;
             color: var(--white);
@@ -247,7 +248,6 @@
         button:disabled {
             opacity: 0.4;
             cursor: not-allowed;
-            transform: none !important;
         }
 
         audio {
@@ -268,7 +268,6 @@
             line-height: 1.4;
         }
 
-        /* 指法與五線譜學習區 */
         .selector-board {
             margin-bottom: 18px;
         }
@@ -294,11 +293,6 @@
             user-select: none;
         }
 
-        .note-btn:hover, .note-btn:active {
-            border-color: var(--primary);
-            background: var(--primary-light);
-        }
-
         .note-btn.active {
             background: var(--primary);
             color: var(--white);
@@ -306,7 +300,6 @@
             box-shadow: 0 4px 8px rgba(44, 122, 123, 0.2);
         }
 
-        /* 溫習輔助面板 */
         .flex-visualizer {
             display: flex;
             flex-direction: column;
@@ -335,7 +328,7 @@
             padding-bottom: 4px;
         }
 
-        .staff-container {
+        .staff-container, .recorder-svg-wrapper {
             width: 100%;
             background: var(--white);
             border-radius: 8px;
@@ -343,16 +336,6 @@
             padding: 8px;
             display: flex;
             justify-content: center;
-        }
-
-        .recorder-svg-wrapper {
-            display: flex;
-            justify-content: center;
-            width: 100%;
-            padding: 8px;
-            background: var(--white);
-            border-radius: 8px;
-            border: 1px solid #e2e8f0;
         }
 
         .sound-hint-box {
@@ -365,7 +348,6 @@
             width: 100%;
         }
 
-        /* 本地歷史紀錄 */
         .history-card {
             margin-top: 20px;
         }
@@ -402,7 +384,6 @@
             margin-top: 12px;
             max-height: 350px;
             overflow-y: auto;
-            padding-right: 4px;
         }
 
         .history-item {
@@ -416,49 +397,15 @@
             align-items: center;
         }
 
-        .history-info {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .history-info h4 {
-            margin: 0;
-            color: var(--dark);
-        }
-
-        .history-info p {
-            margin: 0;
-            font-size: 0.85rem;
-            color: #718096;
-        }
-
-        .history-date-badge {
-            align-self: flex-start;
-            font-size: 0.75rem;
-            background: #cbd5e0;
-            color: #4a5568;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-weight: bold;
-        }
-
-        .history-date-badge.today {
-            background: var(--primary);
-            color: var(--white);
-        }
-
         .history-stars {
             color: #f6e05e;
             font-size: 1.1rem;
-            white-space: nowrap;
         }
 
         .no-records {
             text-align: center;
             color: #a0aec0;
             padding: 20px 0;
-            font-size: 0.95rem;
         }
     </style>
 </head>
@@ -471,11 +418,21 @@
     </header>
 
     <div class="grid-layout">
-        <!-- 左欄：提交練習紀錄 -->
         <div class="card">
             <h3 class="card-title">📝 今日練習登記</h3>
 
             <form id="recordForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="className">🏫 班別</label>
+                        <input type="text" id="className" placeholder="例如：4A" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="studentName">👤 學生姓名</label>
+                        <input type="text" id="studentName" placeholder="例如：陳大文" required>
+                    </div>
+                </div>
+
                 <div class="form-group">
                     <label>📅 練習日期 (系統自動鎖定)</label>
                     <input type="text" id="todayDate" readonly>
@@ -485,7 +442,6 @@
                 <div class="form-group">
                     <label for="practiceTime">⏱️ 練習時間 (分鐘)</label>
                     <input type="number" id="practiceTime" min="5" max="120" placeholder="最少 5 分鐘，最多 120 分鐘" required>
-                    <div class="input-hint">溫馨提示：最少 5 分鐘，最多 2 小時 (120 分鐘)。</div>
                 </div>
 
                 <div class="form-group">
@@ -493,7 +449,6 @@
                     <textarea id="practiceContent" rows="3" placeholder="例如：吹奏 C4-C5 音階 3 次、練習《小蜜蜂》2 遍" required></textarea>
                 </div>
 
-                <!-- 錄音機 (iPad/Safari 相容優化版) -->
                 <div class="recorder-box">
                     <div class="recorder-status">
                         <span id="statusDot" class="status-dot"></span>
@@ -508,19 +463,19 @@
                     <audio id="audioPlayback" controls playsinline></audio>
 
                     <div class="ipad-notice" id="ipadNotice">
-                        💡 <strong>平板/手機錄音貼士：</strong><br>
-                        點擊「🔴 開始錄音」時，請在彈出的提示中選擇「ALLOW (允許)」授權麥克風。如未能錄音，請確保關閉iPad的「靜音模式」。
+                        💡 <strong>錄音提示：</strong><br>
+                        如果在 Google Sites 內無法錄音，請確保是在 Google Sites 使用「嵌入程式碼」並加上了 <code>allow="microphone"</code> 屬性。
                     </div>
                 </div>
 
                 <div class="form-group">
                     <label>⭐ 自評今天表現</label>
                     <div class="star-rating">
-                        <input type="radio" id="star5" name="rating" value="5" required><label for="star5" title="5星：完美">★</label>
-                        <input type="radio" id="star4" name="rating" value="4"><label for="star4" title="4星：非常好">★</label>
-                        <input type="radio" id="star3" name="rating" value="3"><label for="star3" title="3星：有進步">★</label>
-                        <input type="radio" id="star2" name="rating" value="2"><label for="star2" title="2星：還要努力">★</label>
-                        <input type="radio" id="star1" name="rating" value="1"><label for="star1" title="1星：加油啊">★</label>
+                        <input type="radio" id="star5" name="rating" value="5" required><label for="star5" title="5星">★</label>
+                        <input type="radio" id="star4" name="rating" value="4"><label for="star4" title="4星">★</label>
+                        <input type="radio" id="star3" name="rating" value="3"><label for="star3" title="3星">★</label>
+                        <input type="radio" id="star2" name="rating" value="2"><label for="star2" title="2星">★</label>
+                        <input type="radio" id="star1" name="rating" value="1"><label for="star1" title="1星">★</label>
                     </div>
                 </div>
 
@@ -528,47 +483,33 @@
             </form>
         </div>
 
-        <!-- 右欄：指法與五線譜動態學習 -->
         <div class="card">
             <h3 class="card-title">🎼 巴洛克式指法 & 五線譜溫習</h3>
 
             <div class="selector-board">
                 <label>👉 點擊音符：可聽音準及查看指法</label>
-                <div class="note-buttons" id="noteSelector">
-                    <!-- JavaScript 動態生成按鈕 -->
-                </div>
+                <div class="note-buttons" id="noteSelector"></div>
             </div>
 
             <div class="flex-visualizer">
-                <!-- 五線譜 -->
                 <div class="visual-panel">
                     <div class="visual-panel-title">🎼 4分音符位置</div>
                     <div class="staff-container">
                         <svg id="staffSvg" width="220" height="120" viewBox="0 0 220 120">
-                            <!-- 五線譜底線 -->
                             <line x1="10" y1="35" x2="210" y2="35" stroke="#999" stroke-width="1.5" />
                             <line x1="10" y1="47" x2="210" y2="47" stroke="#999" stroke-width="1.5" />
                             <line x1="10" y1="59" x2="210" y2="59" stroke="#999" stroke-width="1.5" />
                             <line x1="10" y1="71" x2="210" y2="71" stroke="#999" stroke-width="1.5" />
                             <line x1="10" y1="83" x2="210" y2="83" stroke="#999" stroke-width="1.5" />
-
-                            <!-- 高音譜號 -->
-                            <text x="15" y="85" font-size="55" font-family="'Segoe UI Symbol', 'Apple Symbols', sans-serif" fill="#2c7a7b">𝄞</text>
-
-                            <!-- 輔助下加一線 (C4) -->
+                            <text x="15" y="85" font-size="55" font-family="'Segoe UI Symbol', sans-serif" fill="#2c7a7b">𝄞</text>
                             <line id="ledgerLine" x1="105" y1="95" x2="135" y2="95" stroke="#333" stroke-width="1.5" style="display:none;" />
-
-                            <!-- 動態升記號 (F#4) -->
-                            <text id="sharpSign" x="98" y="77" font-size="24" font-family="'Segoe UI Symbol', 'Apple Symbols', sans-serif" fill="#1a202c" style="display:none;">♯</text>
-
-                            <!-- 4分音符頭與桿 -->
+                            <text id="sharpSign" x="98" y="77" font-size="24" font-family="'Segoe UI Symbol', sans-serif" fill="#1a202c" style="display:none;">♯</text>
                             <ellipse id="noteHead" cx="120" cy="50" rx="7" ry="5" transform="rotate(-15, 120, 50)" fill="#1a202c" />
                             <line id="noteStem" x1="126" y1="50" x2="126" y2="20" stroke="#1a202c" stroke-width="2" />
                         </svg>
                     </div>
                 </div>
 
-                <!-- 指法 -->
                 <div class="visual-panel">
                     <div class="visual-panel-title">🪈 牧童笛指法孔 (黑：按 | 白：放 | ◐：半開)</div>
                     <div class="recorder-svg-wrapper">
@@ -579,107 +520,55 @@
                                     <stop offset="50%" stop-color="#fff" />
                                 </linearGradient>
                             </defs>
-
-                            <!-- 笛身輪廓 -->
                             <rect x="75" y="10" width="30" height="240" rx="5" fill="#f7fafc" stroke="#cbd5e0" stroke-width="2" />
-                            <line x1="75" y1="120" x2="105" y2="120" stroke="#cbd5e0" stroke-width="1" stroke-dasharray="2" />
-
-                            <!-- 左手右手提示 -->
-                            <text x="25" y="70" font-size="12" fill="#718096">左手 (L)</text>
-                            <text x="25" y="180" font-size="12" fill="#718096">右手 (R)</text>
-
-                            <!-- 背面大拇指孔 0 -->
                             <circle id="hole0" cx="45" cy="50" r="8" fill="#fff" stroke="#333" stroke-width="2" />
-                            <text x="40" y="32" font-size="11" font-weight="bold" fill="#718096">背面 0</text>
-                            <line x1="55" y1="50" x2="75" y2="50" stroke="#a0aec0" stroke-width="1" />
-
-                            <!-- 正面孔 1-7 -->
                             <circle id="hole1" cx="90" cy="40" r="8" fill="#fff" stroke="#333" stroke-width="2" />
-                            <text x="110" y="44" font-size="11" font-weight="bold" fill="#718096">1</text>
-
                             <circle id="hole2" cx="90" cy="65" r="8" fill="#fff" stroke="#333" stroke-width="2" />
-                            <text x="110" y="69" font-size="11" font-weight="bold" fill="#718096">2</text>
-
                             <circle id="hole3" cx="90" cy="90" r="8" fill="#fff" stroke="#333" stroke-width="2" />
-                            <text x="110" y="94" font-size="11" font-weight="bold" fill="#718096">3</text>
-
                             <circle id="hole4" cx="90" cy="140" r="8" fill="#fff" stroke="#333" stroke-width="2" />
-                            <text x="110" y="144" font-size="11" font-weight="bold" fill="#718096">4</text>
-
                             <circle id="hole5" cx="90" cy="165" r="8" fill="#fff" stroke="#333" stroke-width="2" />
-                            <text x="110" y="169" font-size="11" font-weight="bold" fill="#718096">5</text>
-
                             <circle id="hole6" cx="90" cy="190" r="8" fill="#fff" stroke="#333" stroke-width="2" />
-                            <text x="110" y="194" font-size="11" font-weight="bold" fill="#718096">6</text>
-
                             <circle id="hole7" cx="90" cy="215" r="8" fill="#fff" stroke="#333" stroke-width="2" />
-                            <text x="110" y="219" font-size="11" font-weight="bold" fill="#718096">7</text>
                         </svg>
                     </div>
                 </div>
 
-                <!-- 指法小提示 -->
-                <div class="sound-hint-box" id="fingeringTip">
-                    點擊上方音符看看指法秘訣吧！
-                </div>
+                <div class="sound-hint-box" id="fingeringTip">點擊上方音符看看指法秘訣吧！</div>
             </div>
         </div>
     </div>
 
-    <!-- 歷史紀錄與學生成就檢視 -->
     <div class="card history-card">
-        <h3 class="card-title">🏆 我的練習歷史紀錄 (學生自行重溫區)</h3>
-
+        <h3 class="card-title">🏆 我的練習歷史紀錄</h3>
         <div id="statsDashboard" class="stats-dashboard" style="display: none;">
-            <div class="stat-item">
-                <div class="stat-val" id="statDays">0</div>
-                <div class="stat-lbl">📆 累計練習天數</div>
-            </div>
-            <div style="border-left: 1px solid #b2f5ea;"></div>
-            <div class="stat-item">
-                <div class="stat-val" id="statMinutes">0</div>
-                <div class="stat-lbl">⏱️ 累計練習分鐘</div>
-            </div>
+            <div class="stat-item"><div class="stat-val" id="statDays">0</div><div class="stat-lbl">📆 累計練習天數</div></div>
+            <div class="stat-item"><div class="stat-val" id="statMinutes">0</div><div class="stat-lbl">⏱️ 累計練習分鐘</div></div>
         </div>
-
-        <div id="historyList" class="history-list">
-            <!-- 歷史紀錄將在這裡渲染 -->
-        </div>
+        <div id="historyList" class="history-list"></div>
     </div>
 </div>
 
 <script>
-    // 已為你更新為正式部署的 /exec Web App 網址
-    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyrk65u2OUv0GrLwU6qK-k7TVLGqJh2lJXclSBaCT4/exec";
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwHqDAwZ83kL2TsD-VGf0p1u6TmeR1QWW7HIQl_0LkQYLTkHeCjOiYqJhfIpelRlrTVyA/exec";
 
-    // ==========================================
-    // 1. 初始化今日日期 (固定鎖定)
-    // ==========================================
     const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const date = String(today.getDate()).padStart(2, '0');
-    const dateStr = `${year}年${month}月${date}日`;
+    const dateStr = `${today.getFullYear()}年${String(today.getMonth() + 1).padStart(2, '0')}月${String(today.getDate()).padStart(2, '0')}日`;
     document.getElementById('todayDate').value = dateStr;
 
-    // ==========================================
-    // 2. 牧童笛指法與聲音頻率數據 (C4-E5 + F#4)
-    // ==========================================
     const recorderData = {
-        'C4': { name: '中音 Do', hz: 261.63, y: 95, stemUp: true, ledger: true,  sharp: false, holes: [1,1,1,1,1,1,1,1], tip: '🎵 C4 (中音 Do)：全部音孔都要按緊，溫和吹氣！' },
-        'D4': { name: '中音 Re', hz: 293.66, y: 89, stemUp: true, ledger: false, sharp: false, holes: [1,1,1,1,1,1,1,0], tip: '🎵 D4 (中音 Re)：放開最底部的第 7 孔。' },
-        'E4': { name: '中音 Mi', hz: 329.63, y: 83, stemUp: true, ledger: false, sharp: false, holes: [1,1,1,1,1,1,0,0], tip: '🎵 E4 (中音 Mi)：放開右手最底 6、7 兩孔。' },
-        'F4': { name: '中音 Fa', hz: 349.23, y: 77, stemUp: true, ledger: false, sharp: false, holes: [1,1,1,1,1,0,1,1], tip: '⚠️ 巴洛克 Fa：右手按下 4,6,7 孔，放開第 5 孔！' },
-        'F#4': { name: '中音 Fa# / F4#', hz: 369.99, y: 77, stemUp: true, ledger: false, sharp: true, holes: [1,1,1,1,0,1,1,0], tip: '✨ F#4 (升 Fa)：左手按 0,1,2,3 孔，右手放開第 4 孔，按緊 5,6 孔，第 7 孔放開。' },
+        'C4': { name: '中音 Do', hz: 261.63, y: 95, stemUp: true, ledger: true, sharp: false, holes: [1,1,1,1,1,1,1,1], tip: '🎵 C4 (中音 Do)：全部音孔按緊！' },
+        'D4': { name: '中音 Re', hz: 293.66, y: 89, stemUp: true, ledger: false, sharp: false, holes: [1,1,1,1,1,1,1,0], tip: '🎵 D4 (中音 Re)：放開第 7 孔。' },
+        'E4': { name: '中音 Mi', hz: 329.63, y: 83, stemUp: true, ledger: false, sharp: false, holes: [1,1,1,1,1,1,0,0], tip: '🎵 E4 (中音 Mi)：放開 6、7 孔。' },
+        'F4': { name: '中音 Fa', hz: 349.23, y: 77, stemUp: true, ledger: false, sharp: false, holes: [1,1,1,1,1,0,1,1], tip: '⚠️ 巴洛克 Fa：按 4,6,7 孔，放開第 5 孔！' },
+        'F#4': { name: '中音 Fa#', hz: 369.99, y: 77, stemUp: true, ledger: false, sharp: true, holes: [1,1,1,1,0,1,1,0], tip: '✨ F#4 (升 Fa)：放開第 4、7 孔，按緊 5,6 孔。' },
         'G4': { name: '中音 Sol', hz: 392.00, y: 71, stemUp: true, ledger: false, sharp: false, holes: [1,1,1,1,0,0,0,0], tip: '🎵 G4 (中音 Sol)：左手按緊，右手全放開。' },
-        'A4': { name: '中音 La', hz: 440.00, y: 65, stemUp: true, ledger: false, sharp: false, holes: [1,1,1,0,0,0,0,0], tip: '🎵 A4 (中音 La)：左手只需按 0,1,2 孔。' },
+        'A4': { name: '中音 La', hz: 440.00, y: 65, stemUp: true, ledger: false, sharp: false, holes: [1,1,1,0,0,0,0,0], tip: '🎵 A4 (中音 La)：左手按 0,1,2 孔。' },
         'B4': { name: '中音 Ti', hz: 493.88, y: 59, stemUp: false, ledger: false, sharp: false, holes: [1,1,0,0,0,0,0,0], tip: '🎵 B4 (中音 Ti)：左手按 0,1 孔。' },
-        'C5': { name: '高音 Do', hz: 523.25, y: 53, stemUp: false, ledger: false, sharp: false, holes: [1,0,1,0,0,0,0,0], tip: '🎵 C5 (高音 Do)：按住 0,2 孔，放開第 1 孔。' },
-        'D5': { name: '高音 Re', hz: 587.33, y: 47, stemUp: false, ledger: false, sharp: false, holes: [0,0,1,0,0,0,0,0], tip: '🎵 D5 (高音 Re)：0 孔和 1 孔都放開，只按第 2 孔！' },
-        'E5': { name: '高音 Mi', hz: 659.25, y: 41, stemUp: false, ledger: false, sharp: false, holes: [0.5,1,1,1,1,1,0,0], tip: '🔥 高音 Mi (E5)：背面的拇指 0 孔按一半 (◐)，其餘像 Mi 一樣按好。' }
+        'C5': { name: '高音 Do', hz: 523.25, y: 53, stemUp: false, ledger: false, sharp: false, holes: [1,0,1,0,0,0,0,0], tip: '🎵 C5 (高音 Do)：按 0,2 孔，放開第 1 孔。' },
+        'D5': { name: '高音 Re', hz: 587.33, y: 47, stemUp: false, ledger: false, sharp: false, holes: [0,0,1,0,0,0,0,0], tip: '🎵 D5 (高音 Re)：只按第 2 孔！' },
+        'E5': { name: '高音 Mi', hz: 659.25, y: 41, stemUp: false, ledger: false, sharp: false, holes: [0.5,1,1,1,1,1,0,0], tip: '🔥 E5：背面 0 孔按一半 (◐)。' }
     };
 
-    // Web Audio 音效播放 (優化 iOS 點擊解鎖)
     let audioCtx = null;
     function initAudioContext() {
         if (!audioCtx) {
@@ -706,12 +595,9 @@
             gainNode.connect(audioCtx.destination);
             osc.start();
             osc.stop(audioCtx.currentTime + 0.65);
-        } catch (e) {
-            console.log('Audio Context Error:', e);
-        }
+        } catch (e) {}
     }
 
-    // 渲染五線譜與指法圖
     function updateVisualizer(noteKey) {
         const data = recorderData[noteKey];
         if (!data) return;
@@ -733,15 +619,11 @@
         }
 
         if (data.stemUp) {
-            noteStem.setAttribute('x1', '126');
-            noteStem.setAttribute('y1', data.y);
-            noteStem.setAttribute('x2', '126');
-            noteStem.setAttribute('y2', data.y - 32);
+            noteStem.setAttribute('x1', '126'); noteStem.setAttribute('y1', data.y);
+            noteStem.setAttribute('x2', '126'); noteStem.setAttribute('y2', data.y - 32);
         } else {
-            noteStem.setAttribute('x1', '114');
-            noteStem.setAttribute('y1', data.y);
-            noteStem.setAttribute('x2', '114');
-            noteStem.setAttribute('y2', data.y + 32);
+            noteStem.setAttribute('x1', '114'); noteStem.setAttribute('y1', data.y);
+            noteStem.setAttribute('x2', '114'); noteStem.setAttribute('y2', data.y + 32);
         }
 
         for (let i = 0; i <= 7; i++) {
@@ -754,10 +636,9 @@
     }
 
     const noteSelector = document.getElementById('noteSelector');
-    let firstNote = 'C4';
-    Object.keys(recorderData).forEach((note) => {
+    Object.keys(recorderData).forEach((note, index) => {
         const btn = document.createElement('div');
-        btn.className = `note-btn ${note === firstNote ? 'active' : ''}`;
+        btn.className = `note-btn ${index === 0 ? 'active' : ''}`;
         btn.innerText = note;
         btn.addEventListener('click', () => {
             document.querySelectorAll('.note-btn').forEach(b => b.classList.remove('active'));
@@ -767,14 +648,11 @@
         });
         noteSelector.appendChild(btn);
     });
-    updateVisualizer(firstNote);
+    updateVisualizer('C4');
 
-    // ==========================================
-    // 3. 錄音功能實現 (解決 iPad Safari 授權阻擋)
-    // ==========================================
+    // 錄音功能 (解決 Google Sites / Safari 阻擋)
     let mediaRecorder = null;
     let audioChunks = [];
-    let audioStream = null;
     let recordedAudioBlob = null; 
 
     const startBtn = document.getElementById('startBtn');
@@ -785,47 +663,38 @@
 
     startBtn.addEventListener('click', async () => {
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            alert("⚠️ 瀏覽器未開放麥克風權限。請確保網頁經由 HTTPS 開啟（例如 GitHub Pages）。");
+            alert("⚠️ 瀏覽器阻擋麥克風。在 Google Sites 請確保使用「嵌入程式碼」並加上 allow=\"microphone\"！");
             return;
         }
 
         try {
             audioChunks = [];
             recordedAudioBlob = null;
-            audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
             let options = {};
             if (typeof MediaRecorder.isTypeSupported === 'function') {
                 if (MediaRecorder.isTypeSupported('audio/mp4')) options = { mimeType: 'audio/mp4' };
-                else if (MediaRecorder.isTypeSupported('audio/aac')) options = { mimeType: 'audio/aac' };
                 else if (MediaRecorder.isTypeSupported('audio/webm')) options = { mimeType: 'audio/webm' };
             }
 
-            mediaRecorder = new MediaRecorder(audioStream, options);
-
-            mediaRecorder.ondataavailable = event => {
-                if (event.data && event.data.size > 0) audioChunks.push(event.data);
-            };
-
+            mediaRecorder = new MediaRecorder(stream, options);
+            mediaRecorder.ondataavailable = event => { if (event.data.size > 0) audioChunks.push(event.data); };
             mediaRecorder.onstop = () => {
-                const mimeTypeUsed = mediaRecorder.mimeType || 'audio/mp4';
-                recordedAudioBlob = new Blob(audioChunks, { type: mimeTypeUsed });
+                recordedAudioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/mp4' });
                 audioPlayback.src = URL.createObjectURL(recordedAudioBlob);
-
-                if (audioStream) audioStream.getTracks().forEach(track => track.stop());
-
+                stream.getTracks().forEach(track => track.stop());
                 statusDot.classList.remove('active');
-                statusText.innerText = "⏺️ 錄音完成！可點擊播放試聽";
+                statusText.innerText = "⏺️ 錄音完成！可點播放鍵試聽";
             };
 
             mediaRecorder.start(1000); 
             startBtn.disabled = true;
             stopBtn.disabled = false;
             statusDot.classList.add('active');
-            statusText.innerText = "🔴 正在錄音中...請開始吹奏...";
+            statusText.innerText = "🔴 正在錄音中...";
         } catch (err) {
-            console.error('錄音失敗:', err);
-            alert("🔒 無法存取麥克風。如果在 Google Sites 或 iPad 上，請確保已允許麥克風權限！");
+            alert("🔒 無法存取麥克風。請檢查瀏覽器或 Google Sites 的 iframe 麥克風權限！");
         }
     });
 
@@ -838,89 +707,21 @@
         }
     });
 
-    // ==========================================
-    // 4. 本地歷史紀錄與成就統計
-    // ==========================================
-    const STORAGE_KEY = 'recorder_logs_v2';
-    function getLogs() {
-        try {
-            const logs = localStorage.getItem(STORAGE_KEY);
-            return logs ? JSON.parse(logs) : [];
-        } catch(e) { return []; }
-    }
-
-    function saveLog(log) {
-        const logs = getLogs();
-        logs.unshift(log); 
-        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(logs)); } catch(e) {}
-    }
-
-    function renderHistory() {
-        const historyList = document.getElementById('historyList');
-        const statsDashboard = document.getElementById('statsDashboard');
-        const logs = getLogs();
-
-        if (logs.length === 0) {
-            statsDashboard.style.display = 'none';
-            historyList.innerHTML = '<div class="no-records">你還沒有任何練習紀錄唷！快完成今天的第一次練習吧！🌟</div>';
-            return;
-        }
-
-        statsDashboard.style.display = 'flex';
-        const uniqueDays = new Set(logs.map(item => item.date)).size;
-        const totalMinutes = logs.reduce((sum, item) => sum + item.duration, 0);
-        document.getElementById('statDays').innerText = uniqueDays;
-        document.getElementById('statMinutes').innerText = totalMinutes;
-
-        historyList.innerHTML = logs.map(item => {
-            const isToday = item.date === dateStr;
-            return `
-                <div class="history-item" style="${isToday ? 'border-left-color: var(--primary);' : 'border-left-color: #a0aec0;'}">
-                    <div class="history-info">
-                        <span class="history-date-badge ${isToday ? 'today' : ''}">
-                            ${item.date} ${isToday ? '🔥 今日練習' : '📅 往日紀錄'}
-                        </span>
-                        <h4 style="margin: 4px 0;">⏱️ 練習了 ${item.duration} 分鐘</h4>
-                        <p>🎯 內容：${escapeHtml(item.content)}</p>
-                    </div>
-                    <div class="history-stars">
-                        ${'★'.repeat(item.rating)}${'☆'.repeat(5 - item.rating)}
-                    </div>
-                </div>
-            `;
-        }).join('');
-    }
-
-    function escapeHtml(text) {
-        return text
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;");
-    }
-
-    // 初始載入歷史紀錄
-    renderHistory();
-
-    // 輔助函式：將 Blob 音訊轉為 Base64 字串
     function blobToBase64(blob) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
-            reader.onloadend = () => {
-                const base64String = reader.result.split(',')[1];
-                resolve(base64String);
-            };
+            reader.onloadend = () => resolve(reader.result.split(',')[1]);
             reader.onerror = reject;
             reader.readAsDataURL(blob);
         });
     }
 
-    // 表單提交處理 (連結 Google Apps Script)
     document.getElementById('recordForm').addEventListener('submit', async (e) => {
         e.preventDefault();
 
         const submitBtn = document.querySelector('.btn-submit');
+        const className = document.getElementById('className').value;
+        const studentName = document.getElementById('studentName').value;
         const duration = parseInt(document.getElementById('practiceTime').value);
         const content = document.getElementById('practiceContent').value;
         const ratingInput = document.querySelector('input[name="rating"]:checked');
@@ -930,7 +731,6 @@
             return;
         }
 
-        // 變更按鈕狀態，避免重複提交
         submitBtn.disabled = true;
         submitBtn.innerText = "⏳ 正在傳送紀錄至 Google Sheets...";
 
@@ -938,14 +738,14 @@
             let base64Audio = null;
             let mimeType = "audio/mp4";
 
-            // 檢查是否有錄音檔
             if (recordedAudioBlob) {
                 base64Audio = await blobToBase64(recordedAudioBlob);
                 mimeType = recordedAudioBlob.type || "audio/mp4";
             }
 
-            // 打包數據
             const payload = {
+                className: className,
+                studentName: studentName,
                 date: dateStr,
                 duration: duration,
                 content: content,
@@ -954,37 +754,25 @@
                 mimeType: mimeType
             };
 
-            // 發送 POST 請求至 Google Apps Script
             await fetch(GAS_WEB_APP_URL, {
                 method: 'POST',
-                mode: 'no-cors', // 避免跨域阻擋
+                mode: 'no-cors',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
 
-            alert("🎉 提交成功！你的練習紀錄與錄音已成功匯總至老師的 Google Sheets！");
+            alert("🎉 提交成功！你的練習紀錄已匯總至老師的 Google Sheets！");
 
-            // 儲存至本地歷史紀錄
-            saveLog({
-                date: dateStr,
-                duration: duration,
-                content: content,
-                rating: parseInt(ratingInput.value),
-                timestamp: Date.now()
-            });
-            renderHistory();
-
-            // 重置表單
+            document.getElementById('className').value = '';
+            document.getElementById('studentName').value = '';
             document.getElementById('practiceTime').value = '';
             document.getElementById('practiceContent').value = '';
             document.querySelectorAll('input[name="rating"]').forEach(el => el.checked = false);
             audioPlayback.src = '';
             recordedAudioBlob = null;
-            audioChunks = [];
 
         } catch (err) {
-            console.error("提交失敗:", err);
-            alert("❌ 傳送失敗，請檢查網路連線或稍後再試！");
+            alert("❌ 傳送失敗，請檢查網路連線！");
         } finally {
             submitBtn.disabled = false;
             submitBtn.innerText = "✅ 提交今日練習";
