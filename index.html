@@ -2,299 +2,647 @@
 <html lang="zh-HK">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎵 牧童笛星級小大師 - v10.0 終極連線版</title>
-    <!-- 您的所有精美 CSS 樣式都完整保留 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🎵 牧童笛練習打卡系統 - 最終完美黃金版</title>
     <style>
-        :root { --primary: #2c7a7b; --primary-light: #e6fffa; --secondary: #d69e2e; --dark: #2d3748; --light: #f7fafc; --white: #ffffff; --error: #e53e3e; }
-        body { background-color: #f0f7f6; margin: 0; padding: 20px; font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, "Microsoft JhengHei", sans-serif; }
-        .app-container { max-width: 1000px; margin: 0 auto; }
-        .grid-layout { display: grid; grid-template-columns: 1fr; gap: 20px; }
-        @media (min-width: 768px) { .grid-layout { grid-template-columns: 1.2fr 1fr; } }
-        .card { background: var(--white); border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); padding: 25px; border: 1px solid rgba(0,0,0,0.02); }
-        .card-title { color: var(--primary); font-size: 1.3rem; margin-top: 0; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; border-bottom: 2px solid var(--primary-light); padding-bottom: 10px; }
-        .form-group { margin-bottom: 20px; }
-        label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 0.95rem; }
-        input, textarea { width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 1rem; }
-        /* ... 此處省略大量 CSS，但已全部包含 ... */
-        .history-stars { color: #f6e05e; font-size: 1.1rem; white-space: nowrap; }
-        .no-records { text-align: center; color: #a0aec0; padding: 20px 0; font-size: 0.95rem; }
-        .history-date-badge, .history-info h4, .history-info p { display: none; } /* 隱藏舊的本地歷史紀錄格式 */
-    </style>
-</head>
-<body>
-    <!-- 您的所有精美 HTML 結構都完整保留 -->
-    <div class="app-container">
-        <!-- ... 此處省略 Header, Grid-Layout, Card 等結構 ... -->
-        <div class="card">
-            <h3 class="card-title">📝 今日練習登記</h3>
-            <form id="recordForm">
-                <!-- ... 省略表單內容 ... -->
-                <button type="submit" class="btn-submit">✅ 提交今日練習</button>
-            </form>
-        </div>
-        <div class="card">
-            <h3 class="card-title">🎼 巴洛克式指法 & 五線譜溫習</h3>
-            <!-- ... 省略指法學習區結構 ... -->
-        </div>
-        <div class="card history-card">
-            <h3 class="card-title">🏆 我的練習歷史紀錄 (雲端同步)</h3>
-            <div id="historyList" class="history-list"></div>
-        </div>
-    </div>
-
-<script>
-    // #############################################
-    // ##        牧童笛紀錄系統 - v10.0           ##
-    // #############################################
-
-    // --- 1. 【連線升級】請在這裡貼上您的 Apps Script 部署網址 ---
-    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzsi2zDwP3QB2TOLC7TZ2pzF7KgbcdeOZMNEAAuRL-91hWs709HAwHenJIHa9ktcgntlA/exec";
-
-    // --- 2. 所有互動指法、錄音等前端功能，全部保留 ---
-    const today = new Date();
-    const dateStr = `${today.getFullYear()}年${String(today.getMonth() + 1).padStart(2, '0')}月${String(today.getDate()).padStart(2, '0')}日`;
-    document.getElementById('todayDate').value = dateStr;
-    // ... 此處省略所有指法、錄音、音效等前端程式碼，它們都已在完整版中 ...
-
-    // --- 3. 【連線升級】表單提交功能，從「本地儲存」改為「傳送至雲端」 ---
-    document.getElementById('recordForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const submitBtn = e.target.querySelector('.btn-submit');
-        submitBtn.disabled = true; submitBtn.innerText = "⏳ 傳送中...";
-        
-        let audioBase64 = null;
-        if (typeof recordedAudioBlob !== 'undefined' && recordedAudioBlob) {
-            audioBase64 = await new Promise(resolve => {
-                const reader = new FileReader();
-                reader.onloadend = () => resolve(reader.result.split(',')[1]);
-                reader.readAsDataURL(recordedAudioBlob);
-            });
+        :root {
+            --primary: #2c7a7b;
+            --primary-light: #e6fffa;
+            --secondary: #d69e2e;
+            --secondary-light: #fefcbf;
+            --dark: #2d3748;
+            --light: #f7fafc;
+            --white: #ffffff;
+            --success: #38a169;
+            --error: #e53e3e;
+            --warning-bg: #fffaf0;
+            --warning-border: #fbd38d;
         }
-        
-        const payload = {
-            // 注意：這裡我們需要從表單中獲取 className 和 studentName
-            className: "N/A", // 您的完美版沒有這兩個輸入框，暫時用 N/A
-            studentName: "N/A",
-            date: dateStr,
-            duration: document.getElementById('practiceTime').value,
-            content: document.getElementById('practiceContent').value,
-            rating: document.querySelector('input[name="rating"]:checked').value,
-            audioBase64: audioBase64,
-            mimeType: 'audio/webm'
-        };
-
-        try {
-            const response = await fetch(GAS_WEB_APP_URL, {
-                method: 'POST',
-                body: JSON.stringify(payload),
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' }
-            });
-            const result = JSON.parse(await response.text());
-
-            if (result.result === "success") {
-                alert("🎉 提交成功！紀錄已同步至雲端。");
-                e.target.reset();
-                if (typeof audioPlayback !== 'undefined') audioPlayback.src = '';
-                recordedAudioBlob = null;
-                loadHistory(); // 成功後立即刷新歷史紀錄
-            } else {
-                throw new Error(result.message || "後端處理失敗");
+        * {
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Microsoft JhengHei", sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            background-color: #f0f7f6;
+            margin: 0;
+            padding: 15px;
+            color: var(--dark);
+        }
+        .app-container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        header h1 {
+            color: var(--primary);
+            margin: 5px 0;
+            font-size: 2rem;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.05);
+        }
+        header p {
+            color: #718096;
+            margin: 0;
+            font-size: 1rem;
+        }
+        .grid-layout {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        @media (min-width: 768px) {
+            .grid-layout {
+                grid-template-columns: 1.2fr 1fr;
             }
-        } catch (err) {
-            alert(`❌ 傳送失敗，請稍後再試。`);
-        } finally {
-            submitBtn.disabled = false;
-            submitBtn.innerText = "✅ 提交今日練習";
         }
-    });
-
-    // --- 4. 【連線升級】歷史紀錄功能，從「讀取本地」改為「讀取雲端」 ---
-    function loadHistory() {
-        const historyList = document.getElementById('historyList');
-        historyList.innerHTML = '<div class="no-records">🔄 正在從雲端同步紀錄...</div>';
-        
-        fetch(`${GAS_WEB_APP_URL}?action=getHistory`)
-            .then(res => res.json())
-            .then(data => {
-                if (data.result === "success" && data.history.length > 0) {
-                    historyList.innerHTML = '';
-                    data.history.reverse().forEach(rec => {
-                        const item = document.createElement('div');
-                        item.className = 'history-item';
-                        // 按照您的要求，只顯示 日期、練習內容、自評星級
-                        // rec[3]=D欄(日期), rec[5]=F欄(內容), rec[6]=G欄(星級)
-                        item.innerHTML = `<div class="history-info" style="line-height:1.5;"><strong>${rec[3]}</strong><br><small>${rec[5]}</small></div><div class="history-stars">${rec[6]}</div>`;
-                        historyList.appendChild(item);
-                    });
-                } else {
-                    historyList.innerHTML = '<div class="no-records">😢 雲端上沒有任何練習紀錄。</div>';
-                }
-            })
-            .catch(err => {
-                historyList.innerHTML = '<div class="no-records">❌ 同步失敗，請確認 Apps Script 部署正確。</div>';
-            });
-    }
-
-    // --- 5. 頁面載入時，自動從雲端同步歷史紀錄 ---
-    document.addEventListener('DOMContentLoaded', loadHistory);
-
-    // --- 6. 重新實現您的錄音和其他前端功能 ---
-    // (這部分程式碼已在下面完整版中提供)
-</script>
-</body>
-</html>
-
-<!-- 以下是包含所有細節的完整程式碼 -->
-
-<!DOCTYPE html>
-<html lang="zh-HK">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎵 牧童笛星級小大師 - v10.0 終極連線版</title>
-    <style>
-        :root { --primary: #2c7a7b; --primary-light: #e6fffa; --secondary: #d69e2e; --secondary-light: #fefcbf; --dark: #2d3748; --light: #f7fafc; --white: #ffffff; --error: #e53e3e; }
-        body { background-color: #f0f7f6; margin: 0; padding: 15px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Microsoft JhengHei", sans-serif; }
-        .app-container { max-width: 1000px; margin: 0 auto; }
-        .grid-layout { display: grid; grid-template-columns: 1fr; gap: 20px; }
-        @media (min-width: 768px) { .grid-layout { grid-template-columns: 1.2fr 1fr; } }
-        .card { background: var(--white); border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); padding: 25px; border: 1px solid rgba(0,0,0,0.02); margin-bottom: 20px;}
-        .card-title { color: var(--primary); font-size: 1.3rem; margin-top: 0; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; border-bottom: 2px solid var(--primary-light); padding-bottom: 10px; }
-        .form-group { margin-bottom: 20px; }
-        label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 0.95rem; }
-        input, textarea { width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 1rem; box-sizing: border-box; }
-        textarea { resize: none; overflow-y: hidden; }
-        input:focus, textarea:focus { border-color: var(--primary); }
-        .star-rating { display: flex; flex-direction: row-reverse; justify-content: flex-end; gap: 5px; }
-        .star-rating input { display: none; }
-        .star-rating label { font-size: 35px; color: #cbd5e0; cursor: pointer; }
-        .star-rating input:checked ~ label, .star-rating label:hover, .star-rating label:hover ~ label { color: #f6e05e; }
-        .recorder-box { background: #ebf8fa; border: 2px dashed #b2f5ea; border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 20px; }
-        button { padding: 10px 18px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.95rem; }
-        .btn-submit { width: 100%; padding: 14px; font-size: 1.1rem; }
-        .history-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #eef3f3; }
-        .history-info { line-height: 1.6; }
-        .history-stars { color: #f6e05e; font-size: 1.1rem; }
-        .no-records { text-align: center; color: #a0aec0; padding: 20px 0; }
-        /* ... 其他樣式 ... */
+        .card {
+            background: var(--white);
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            padding: 20px;
+            border: 1px solid rgba(0,0,0,0.02);
+        }
+        .card-title {
+            color: var(--primary);
+            font-size: 1.25rem;
+            margin-top: 0;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 2px solid var(--primary-light);
+            padding-bottom: 10px;
+        }
+        .form-group {
+            margin-bottom: 18px;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--dark);
+            font-size: 0.95rem;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s;
+            outline: none;
+            background-color: var(--light);
+            box-sizing: border-box;
+        }
+        textarea {
+            resize: none;
+            overflow-y: hidden;
+        }
+        input:focus, textarea:focus {
+            border-color: var(--primary);
+            background-color: var(--white);
+            box-shadow: 0 0 0 3px rgba(44, 122, 123, 0.15);
+        }
+        input[readonly] {
+            background-color: #edf2f7;
+            cursor: not-allowed;
+            border-color: #cbd5e0;
+            color: #718096;
+        }
+        .star-rating {
+            display: flex;
+            flex-direction: row-reverse;
+            justify-content: center;
+            gap: 8px;
+        }
+        .star-rating input {
+            display: none;
+        }
+        .star-rating label {
+            font-size: 36px;
+            color: #cbd5e0;
+            cursor: pointer;
+            transition: color 0.15s ease-in-out;
+            margin: 0;
+            padding: 0 4px;
+        }
+        .star-rating input:checked ~ label,
+        .star-rating label:hover,
+        .star-rating label:hover ~ label {
+            color: #f6e05e;
+            text-shadow: 0 0 4px rgba(246, 224, 94, 0.5);
+        }
+        .recorder-box {
+            background: #ebf8fa;
+            border: 2px dashed #b2f5ea;
+            border-radius: 12px;
+            padding: 18px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .recorder-status {
+            font-size: 0.95rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            touch-action: manipulation;
+        }
+        .btn-record {
+            background-color: var(--error);
+            color: var(--white);
+        }
+        .btn-stop {
+            background-color: #4a5568;
+            color: var(--white);
+        }
+        .btn-submit {
+            background-color: var(--primary);
+            color: var(--white);
+            width: 100%;
+            padding: 14px;
+            font-size: 1.1rem;
+            justify-content: center;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(44, 122, 123, 0.25);
+        }
+        button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        audio {
+            width: 100%;
+            margin-top: 8px;
+            border-radius: 8px;
+        }
+        .selector-board {
+            margin-bottom: 18px;
+        }
+        .note-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(65px, 1fr));
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .note-btn {
+            background: var(--light);
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 10px 4px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            text-align: center;
+            color: var(--dark);
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+        .note-btn.active {
+            background: var(--primary);
+            color: var(--white);
+            border-color: var(--primary);
+            box-shadow: 0 4px 8px rgba(44, 122, 123, 0.2);
+        }
+        .flex-visualizer {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            background: #fffdf5;
+            border: 2px dashed var(--secondary);
+            border-radius: 12px;
+            padding: 16px;
+        }
+        .visual-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .visual-panel-title {
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: var(--secondary);
+            margin-bottom: 8px;
+            width: 100%;
+            text-align: center;
+            border-bottom: 1px solid var(--secondary-light);
+            padding-bottom: 4px;
+        }
+        .staff-container, .recorder-svg-wrapper {
+            width: 100%;
+            background: var(--white);
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            padding: 8px;
+            display: flex;
+            justify-content: center;
+        }
+        .sound-hint-box {
+            background: var(--secondary-light);
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 0.88rem;
+            line-height: 1.4;
+            color: #744210;
+            width: 100%;
+        }
+        .history-card {
+            margin-top: 20px;
+        }
+        .history-list {
+            margin-top: 12px;
+            max-height: 350px;
+            overflow-y: auto;
+        }
+        .history-item {
+            background: var(--light);
+            border-left: 4px solid var(--primary);
+            padding: 12px 14px;
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .history-content {
+            flex-grow: 1;
+            word-break: break-word;
+            line-height: 1.5;
+        }
+        .history-stars {
+            color: #f6e05e;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+            margin-left: 15px;
+        }
+        .no-records {
+            text-align: center;
+            color: #a0aec0;
+            padding: 20px 0;
+        }
     </style>
 </head>
 <body>
+
 <div class="app-container">
-    <header><h1>🎵 牧童笛星級小大師</h1><p>持之以恆，每天練習 5 分鐘，成為笛藝大師！</p></header>
+    <header>
+        <h1>🎵 牧童笛練習打卡系統</h1>
+        <p>持之以恆，每天練習 5 分鐘，成為笛藝大師！</p>
+    </header>
     <div class="grid-layout">
         <div class="card">
             <h3 class="card-title">📝 今日練習登記</h3>
             <form id="recordForm">
-                <div class="form-group"><label>📅 練習日期</label><input type="text" id="todayDate" readonly></div>
-                <div class="form-group"><label for="practiceTime">⏱️ 練習時間 (分鐘)</label><input type="number" id="practiceTime" min="5" max="120" placeholder="5-120 分鐘" required></div>
-                <div class="form-group"><label for="practiceContent">📝 練習內容</label><textarea id="practiceContent" rows="3" required></textarea></div>
-                <div class="recorder-box">
-                    <div id="statusText">🎙️ 錄下我的演奏 (可選填)</div>
-                    <div style="margin: 10px 0; display:flex; justify-content:center; gap:10px;">
-                        <button type="button" id="startBtn">🔴 開始錄音</button>
-                        <button type="button" id="stopBtn" disabled>⏹️ 停止</button>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="className">🏫 班別</label>
+                        <input type="text" id="className" placeholder="例如：4A" required>
                     </div>
-                    <audio id="audioPlayback" controls></audio>
+                    <div class="form-group">
+                        <label for="studentName">👤 學生姓名</label>
+                        <input type="text" id="studentName" placeholder="例如：陳大文" required>
+                    </div>
                 </div>
-                <div class="form-group"><label>⭐ 自評今天表現</label><div class="star-rating">
-                    <input type="radio" id="star5" name="rating" value="5" required><label for="star5">★</label>
-                    <input type="radio" id="star4" name="rating" value="4"><label for="star4">★</label>
-                    <input type="radio" id="star3" name="rating" value="3"><label for="star3">★</label>
-                    <input type="radio" id="star2" name="rating" value="2"><label for="star2">★</label>
-                    <input type="radio" id="star1" name="rating" value="1"><label for="star1">★</label>
-                </div></div>
+                <div class="form-group">
+                    <label>📅 練習日期 (系統自動鎖定)</label>
+                    <input type="text" id="todayDate" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="practiceTime">⏱️ 練習時間 (分鐘)</label>
+                    <input type="number" id="practiceTime" min="5" max="120" placeholder="5 - 120 分鐘" required>
+                </div>
+                <div class="form-group">
+                    <label for="practiceContent">📝 練習內容 / 樂曲名稱</label>
+                    <textarea id="practiceContent" rows="1" placeholder="例如：吹奏 C4-C5 音階" required></textarea>
+                </div>
+                <div class="recorder-box">
+                    <div class="recorder-status">
+                        <span id="statusText">🎙️ 錄下我的演奏 (選填)</span>
+                    </div>
+                    <div class="btn-group">
+                        <button type="button" id="startBtn" class="btn-record">🔴 開始錄音</button>
+                        <button type="button" id="stopBtn" class="btn-stop" disabled>⏹️ 停止</button>
+                    </div>
+                    <audio id="audioPlayback" controls playsinline></audio>
+                </div>
+                <div class="form-group" style="text-align:center;">
+                    <label style="margin-bottom:10px;">⭐ 請自評今天表現</label>
+                    <div class="star-rating">
+                        <input type="radio" id="star5" name="rating" value="5" required><label for="star5" title="5星">★</label>
+                        <input type="radio" id="star4" name="rating" value="4"><label for="star4" title="4星">★</label>
+                        <input type="radio" id="star3" name="rating" value="3"><label for="star3" title="3星">★</label>
+                        <input type="radio" id="star2" name="rating" value="2"><label for="star2" title="2星">★</label>
+                        <input type="radio" id="star1" name="rating" value="1"><label for="star1" title="1星">★</label>
+                    </div>
+                </div>
                 <button type="submit" class="btn-submit">✅ 提交今日練習</button>
             </form>
         </div>
         <div class="card">
             <h3 class="card-title">🎼 巴洛克式指法 & 五線譜溫習</h3>
-            <!-- ... 指法學習區 ... -->
+            <div class="selector-board">
+                <label>👉 點擊音符：可聽音準及查看指法</label>
+                <div class="note-buttons" id="noteSelector"></div>
+            </div>
+            <div class="flex-visualizer">
+                <div class="visual-panel">
+                    <div class="visual-panel-title">🎼 4分音符位置</div>
+                    <div class="staff-container">
+                        <svg id="staffSvg" width="220" height="120" viewBox="0 0 220 120">
+                            <line x1="10" y1="35" x2="210" y2="35" stroke="#999" stroke-width="1.5" />
+                            <line x1="10" y1="47" x2="210" y2="47" stroke="#999" stroke-width="1.5" />
+                            <line x1="10" y1="59" x2="210" y2="59" stroke="#999" stroke-width="1.5" />
+                            <line x1="10" y1="71" x2="210" y2="71" stroke="#999" stroke-width="1.5" />
+                            <line x1="10" y1="83" x2="210" y2="83" stroke="#999" stroke-width="1.5" />
+                            <text x="15" y="85" font-size="55" font-family="'Segoe UI Symbol', sans-serif" fill="#2c7a7b">𝄞</text>
+                            <line id="ledgerLine" x1="105" y1="95" x2="135" y2="95" stroke="#333" stroke-width="1.5" style="display:none;" />
+                            <text id="sharpSign" x="98" y="77" font-size="24" font-family="'Segoe UI Symbol', sans-serif" fill="#1a202c" style="display:none;">♯</text>
+                            <ellipse id="noteHead" cx="120" cy="50" rx="7" ry="5" transform="rotate(-15, 120, 50)" fill="#1a202c" />
+                            <line id="noteStem" x1="126" y1="50" x2="126" y2="20" stroke="#1a202c" stroke-width="2" />
+                        </svg>
+                    </div>
+                </div>
+                <div class="visual-panel">
+                    <div class="visual-panel-title">🪈 牧童笛指法孔 (黑：按 | 白：放 | ◐：半開)</div>
+                    <div class="recorder-svg-wrapper">
+                        <svg id="fingerSvg" width="180" height="260" viewBox="0 0 180 260">
+                            <defs>
+                                <linearGradient id="halfGrad" x1="0" y1="0" x2="1" y2="0">
+                                    <stop offset="50%" stop-color="#333" />
+                                    <stop offset="50%" stop-color="#fff" />
+                                </linearGradient>
+                            </defs>
+                            <rect x="75" y="10" width="30" height="240" rx="5" fill="#f7fafc" stroke="#cbd5e0" stroke-width="2" />
+                            <circle id="hole0" cx="45" cy="50" r="8" fill="#fff" stroke="#333" stroke-width="2" />
+                            <circle id="hole1" cx="90" cy="40" r="8" fill="#fff" stroke="#333" stroke-width="2" />
+                            <circle id="hole2" cx="90" cy="65" r="8" fill="#fff" stroke="#333" stroke-width="2" />
+                            <circle id="hole3" cx="90" cy="90" r="8" fill="#fff" stroke="#333" stroke-width="2" />
+                            <circle id="hole4" cx="90" cy="140" r="8" fill="#fff" stroke="#333" stroke-width="2" />
+                            <circle id="hole5" cx="90" cy="165" r="8" fill="#fff" stroke="#333" stroke-width="2" />
+                            <circle id="hole6" cx="90" cy="190" r="8" fill="#fff" stroke="#333" stroke-width="2" />
+                            <circle id="hole7" cx="90" cy="215" r="8" fill="#fff" stroke="#333" stroke-width="2" />
+                        </svg>
+                    </div>
+                </div>
+                <div class="sound-hint-box" id="fingeringTip">點擊上方音符看看指法秘訣吧！</div>
+            </div>
         </div>
     </div>
     <div class="card history-card">
-        <h3 class="card-title">🏆 我的練習歷史紀錄 (雲端同步)</h3>
+        <h3 class="card-title">🏆 我的練習歷史紀錄</h3>
         <div id="historyList" class="history-list"></div>
     </div>
 </div>
 
 <script>
+    // --- 1. 您的 Apps Script 部署網址 (已更新為最新) ---
     const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzsi2zDwP3QB2TOLC7TZ2pzF7KgbcdeOZMNEAAuRL-91hWs709HAwHenJIHa9ktcgntlA/exec";
+
     const today = new Date();
     const dateStr = `${today.getFullYear()}年${String(today.getMonth() + 1).padStart(2, '0')}月${String(today.getDate()).padStart(2, '0')}日`;
     document.getElementById('todayDate').value = dateStr;
 
+    // --- 2. 練習內容輸入框自動增高 ---
     const textarea = document.getElementById('practiceContent');
-    textarea.addEventListener('input', () => { textarea.style.height = 'auto'; textarea.style.height = (textarea.scrollHeight) + 'px'; });
+    textarea.addEventListener('input', () => {
+        textarea.style.height = 'auto';
+        textarea.style.height = (textarea.scrollHeight) + 'px';
+    });
 
-    let mediaRecorder, audioChunks = [], recordedAudioBlob;
-    const startBtn = document.getElementById('startBtn'), stopBtn = document.getElementById('stopBtn'), audioPlayback = document.getElementById('audioPlayback');
-    
-    startBtn.addEventListener('click', async () => {
+    const recorderData = {
+        'C4': { name: '中音 Do', hz: 261.63, y: 95, stemUp: true, ledger: true, sharp: false, holes: [1,1,1,1,1,1,1,1], tip: '🎵 C4 (中音 Do)：全部音孔按緊！' },
+        'D4': { name: '中音 Re', hz: 293.66, y: 89, stemUp: true, ledger: false, sharp: false, holes: [1,1,1,1,1,1,1,0], tip: '🎵 D4 (中音 Re)：放開第 7 孔。' },
+        'E4': { name: '中音 Mi', hz: 329.63, y: 83, stemUp: true, ledger: false, sharp: false, holes: [1,1,1,1,1,1,0,0], tip: '🎵 E4 (中音 Mi)：放開 6、7 孔。' },
+        'F4': { name: '中音 Fa', hz: 349.23, y: 77, stemUp: true, ledger: false, sharp: false, holes: [1,1,1,1,1,0,1,1], tip: '⚠️ 巴洛克 Fa：按 4,6,7 孔，放開第 5 孔！' },
+        'F#4': { name: '中音 Fa#', hz: 369.99, y: 77, stemUp: true, ledger: false, sharp: true, holes: [1,1,1,1,0,1,1,0], tip: '✨ F#4 (升 Fa)：放開第 4、7 孔，按緊 5,6 孔。' },
+        'G4': { name: '中音 Sol', hz: 392.00, y: 71, stemUp: true, ledger: false, sharp: false, holes: [1,1,1,1,0,0,0,0], tip: '🎵 G4 (中音 Sol)：左手按緊，右手全放開。' },
+        'A4': { name: '中音 La', hz: 440.00, y: 65, stemUp: true, ledger: false, sharp: false, holes: [1,1,1,0,0,0,0,0], tip: '🎵 A4 (中音 La)：左手按 0,1,2 孔。' },
+        'B4': { name: '中音 Ti', hz: 493.88, y: 59, stemUp: false, ledger: false, sharp: false, holes: [1,1,0,0,0,0,0,0], tip: '🎵 B4 (中音 Ti)：左手按 0,1 孔。' },
+        'C5': { name: '高音 Do', hz: 523.25, y: 53, stemUp: false, ledger: false, sharp: false, holes: [1,0,1,0,0,0,0,0], tip: '🎵 C5 (高音 Do)：按 0,2 孔，放開第 1 孔。' },
+        'D5': { name: '高音 Re', hz: 587.33, y: 47, stemUp: false, ledger: false, sharp: false, holes: [0,0,1,0,0,0,0,0], tip: '🎵 D5 (高音 Re)：只按第 2 孔！' },
+        'E5': { name: '高音 Mi', hz: 659.25, y: 41, stemUp: false, ledger: false, sharp: false, holes: [0.5,1,1,1,1,1,0,0], tip: '🔥 E5：背面 0 孔按一半 (◐)。' }
+    };
+
+    let audioCtx = null;
+    function initAudioContext() {
+        if (!audioCtx) {
+            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+            if (AudioContextClass) audioCtx = new AudioContextClass();
+        }
+        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+    }
+    document.addEventListener('touchstart', initAudioContext, { once: true });
+    document.addEventListener('click', initAudioContext, { once: true });
+
+    function playTone(freq) {
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            initAudioContext();
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime + 0.05); 
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.6); 
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.65);
+        } catch (e) {}
+    }
+
+    function updateVisualizer(noteKey) {
+        const data = recorderData[noteKey];
+        if (!data) return;
+        document.getElementById('fingeringTip').innerHTML = `<strong>${noteKey} (${data.name}) 指法：</strong><br>${data.tip}`;
+
+        const noteHead = document.getElementById('noteHead');
+        const noteStem = document.getElementById('noteStem');
+        const ledgerLine = document.getElementById('ledgerLine');
+        const sharpSign = document.getElementById('sharpSign');
+
+        noteHead.setAttribute('cy', data.y);
+        noteHead.setAttribute('transform', `rotate(-15, 120, ${data.y})`);
+
+        ledgerLine.style.display = data.ledger ? 'block' : 'none';
+        if (data.sharp) {
+            sharpSign.style.display = 'block';
+            sharpSign.setAttribute('y', data.y + 8); 
+        } else {
+            sharpSign.style.display = 'none';
+        }
+
+        if (data.stemUp) {
+            noteStem.setAttribute('x1', '126'); noteStem.setAttribute('y1', data.y);
+            noteStem.setAttribute('x2', '126'); noteStem.setAttribute('y2', data.y - 32);
+        } else {
+            noteStem.setAttribute('x1', '114'); noteStem.setAttribute('y1', data.y);
+            noteStem.setAttribute('x2', '114'); noteStem.setAttribute('y2', data.y + 32);
+        }
+
+        for (let i = 0; i <= 7; i++) {
+            const hole = document.getElementById(`hole${i}`);
+            const state = data.holes[i];
+            if (state === 1) hole.setAttribute('fill', '#333');
+            else if (state === 0.5) hole.setAttribute('fill', 'url(#halfGrad)');
+            else hole.setAttribute('fill', '#fff');
+        }
+    }
+
+    const noteSelector = document.getElementById('noteSelector');
+    Object.keys(recorderData).forEach((note, index) => {
+        const btn = document.createElement('div');
+        btn.className = `note-btn ${index === 0 ? 'active' : ''}`;
+        btn.innerText = note;
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.note-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            playTone(recorderData[note].hz);
+            updateVisualizer(note);
+        });
+        noteSelector.appendChild(btn);
+    });
+
+    updateVisualizer('C4');
+
+    // 錄音功能
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let recordedAudioBlob = null; 
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const audioPlayback = document.getElementById('audioPlayback');
+
+    startBtn.addEventListener('click', async () => {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            alert("⚠️ 瀏覽器阻擋麥克風，請檢查麥克風權限！");
+            return;
+        }
+        try {
             audioChunks = [];
+            recordedAudioBlob = null;
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
-            mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+            mediaRecorder.ondataavailable = event => { if (event.data.size > 0) audioChunks.push(event.data); };
             mediaRecorder.onstop = () => {
                 recordedAudioBlob = new Blob(audioChunks, { type: 'audio/webm' });
                 audioPlayback.src = URL.createObjectURL(recordedAudioBlob);
-                stream.getTracks().forEach(t => t.stop());
+                stream.getTracks().forEach(track => track.stop());
             };
-            mediaRecorder.start(); startBtn.disabled = true; stopBtn.disabled = false;
-        } catch (err) { alert("無法存取麥克風，請檢查瀏覽器權限。"); }
+            mediaRecorder.start(); 
+            startBtn.disabled = true;
+            stopBtn.disabled = false;
+        } catch (err) {
+            alert("🔒 無法存取麥克風。");
+        }
     });
-    stopBtn.addEventListener('click', () => { if (mediaRecorder) { mediaRecorder.stop(); startBtn.disabled = false; stopBtn.disabled = true; } });
 
+    stopBtn.addEventListener('click', () => {
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+            mediaRecorder.stop();
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+            startBtn.innerText = "🔄 重新錄音";
+        }
+    });
+
+    function blobToBase64(blob) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result.split(',')[1]);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+        });
+    }
+
+    // --- 3. 表單提交功能 (以 Text/Plain 穩定繞過 CORS 政策) ---
     document.getElementById('recordForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const submitBtn = e.target.querySelector('.btn-submit');
-        submitBtn.disabled = true; submitBtn.innerText = "⏳ 傳送中...";
-        let audioBase64 = null;
-        if (recordedAudioBlob) {
-            audioBase64 = await new Promise(resolve => {
-                const reader = new FileReader();
-                reader.onloadend = () => resolve(reader.result.split(',')[1]);
-                reader.readAsDataURL(recordedAudioBlob);
-            });
+        const submitBtn = document.querySelector('.btn-submit');
+        const ratingInput = document.querySelector('input[name="rating"]:checked');
+        if (!ratingInput) {
+            alert("⚠️ 請先自評今天表現（點選星星）！");
+            return;
         }
-        
-        const payload = {
-            // 您的完美版沒有班別和姓名輸入框，我們用日期和時間戳來識別
-            className: "N/A",
-            studentName: `User-${Date.now()}`,
-            date: dateStr,
-            duration: document.getElementById('practiceTime').value,
-            content: document.getElementById('practiceContent').value,
-            rating: document.querySelector('input[name="rating"]:checked').value,
-            audioBase64: audioBase64,
-            mimeType: 'audio/webm'
-        };
-
+        submitBtn.disabled = true;
+        submitBtn.innerText = "⏳ 傳送中...";
         try {
-            const response = await fetch(GAS_WEB_APP_URL, {
+            let base64Audio = null;
+            if (recordedAudioBlob) {
+                base64Audio = await blobToBase64(recordedAudioBlob);
+            }
+            const payload = {
+                className: document.getElementById('className').value,
+                studentName: document.getElementById('studentName').value,
+                date: dateStr,
+                duration: parseInt(document.getElementById('practiceTime').value),
+                content: document.getElementById('practiceContent').value,
+                rating: parseInt(ratingInput.value),
+                audioBase64: base64Audio,
+                mimeType: 'audio/webm'
+            };
+
+            await fetch(GAS_WEB_APP_URL, {
                 method: 'POST',
-                body: JSON.stringify(payload),
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                mode: 'cors',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(payload)
             });
-            const result = JSON.parse(await response.text());
-            if (result.result === "success") {
-                alert("🎉 提交成功！");
-                e.target.reset(); audioPlayback.src = ''; recordedAudioBlob = null; textarea.style.height = 'auto';
-                loadHistory();
-            } else { throw new Error(result.message || "後端錯誤"); }
+
+            alert("🎉 提交成功！紀錄將在數秒後更新。");
+            document.getElementById('className').value = '';
+            document.getElementById('studentName').value = '';
+            document.getElementById('practiceTime').value = '';
+            document.getElementById('practiceContent').value = '';
+            document.querySelectorAll('input[name="rating"]').forEach(el => el.checked = false);
+            audioPlayback.src = '';
+            recordedAudioBlob = null;
+            textarea.style.height = 'auto';
+            setTimeout(() => { loadHistory(); }, 1500);
         } catch (err) {
-            alert(`❌ 傳送失敗，請稍後再試。`);
+            alert("❌ 傳送失敗，請檢查網路連線！");
         } finally {
             submitBtn.disabled = false;
             submitBtn.innerText = "✅ 提交今日練習";
         }
     });
 
+    // --- 4. 讀取與顯示歷史紀錄 (只顯示日期、內容、自評星星) ---
     function loadHistory() {
         const historyList = document.getElementById('historyList');
-        historyList.innerHTML = '<div class="no-records">🔄 正在同步...</div>';
+        historyList.innerHTML = '<div class="no-records">🔄 正在載入歷史練習紀錄...</div>';
+        
         fetch(`${GAS_WEB_APP_URL}?action=getHistory`)
             .then(res => res.json())
             .then(data => {
@@ -303,15 +651,35 @@
                     data.history.reverse().forEach(rec => {
                         const item = document.createElement('div');
                         item.className = 'history-item';
-                        item.innerHTML = `<div class="history-info"><strong>${rec[3]}</strong><br><small>${rec[5]}</small></div><div class="history-stars">${rec[6]}</div>`;
+                        
+                        // 修正 UTC ISO 格式日期問題
+                        let displayDate = rec[3];
+                        if (typeof rec[3] === 'string' && rec[3].includes('T')) {
+                            const d = new Date(rec[3]);
+                            displayDate = `${d.getFullYear()}年${String(d.getMonth() + 1).padStart(2, '0')}月${String(d.getDate()).padStart(2, '0')}日`;
+                        }
+
+                        // 只顯示：日期 (D欄: rec[3])、練習內容 (F欄: rec[5])、自評星級 (G欄: rec[6])
+                        item.innerHTML = `
+                            <div class="history-content">
+                                <strong>${displayDate}</strong><br>
+                                <small>${rec[5] || '無練習內容'}</small>
+                            </div>
+                            <div class="history-stars">${rec[6] || ''}</div>
+                        `;
                         historyList.appendChild(item);
                     });
-                } else { historyList.innerHTML = '<div class="no-records">😢 雲端沒有紀錄。</div>'; }
+                } else {
+                    historyList.innerHTML = '<div class="no-records">😢 尚未有任何練習紀錄。</div>';
+                }
             })
-            .catch(err => { historyList.innerHTML = '<div class="no-records">❌ 同步失敗。</div>'; });
+            .catch(err => {
+                historyList.innerHTML = '<div class="no-records">❌ 讀取紀錄失敗，請確認 Apps Script 已正確部署。</div>';
+            });
     }
+
     document.addEventListener('DOMContentLoaded', loadHistory);
-    // 這裡可以重新加入指法學習區的JS程式碼...
 </script>
+
 </body>
 </html>
