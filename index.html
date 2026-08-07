@@ -101,9 +101,9 @@
     // ##            請在這裡貼上您的              ##
     // ##      Google Apps Script 部署網址        ##
     // #############################################
-    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzWLtyVTK0t-nUHgFuEVqTMdhqJ1dN3agESUHHioY5O92-ABxLt34QXiKJAikkqeWAGVw/exec";
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwHqDAwZ83kL2TsD-VGf0p1u6TmeR1QWW7HIQl_0LkQYLTkHeCjOiYqJhfIpelRlrTVyA/exec";
     
-    // --- 以下為主要程式，請勿修改 ---
+    // --- 以下為主要程式 v3.0 (最終美化版)，請勿修改 ---
     const today = new Date();
     const dateStr = `${today.getFullYear()}年${String(today.getMonth() + 1).padStart(2, '0')}月${String(today.getDate()).padStart(2, '0')}日`;
     document.getElementById('todayDate').value = dateStr;
@@ -147,41 +147,73 @@
                 date: dateStr, duration: parseInt(document.getElementById('practiceTime').value), content: document.getElementById('practiceContent').value,
                 rating: parseInt(ratingInput.value), audioBase64: base64Audio, mimeType: mimeType
             };
+            // 使用 no-cors 模式，因為 Apps Script 的簡單回應無法處理 CORS preflight
             await fetch(GAS_WEB_APP_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
-            alert("🎉 提交成功！");
+            alert("🎉 提交成功！紀錄將在一分鐘後更新。");
             e.target.reset();
             audioPlayback.src = '';
             recordedAudioBlob = null;
-            loadHistory(); // 提交成功後重新載入紀錄
+            // 提交成功後，稍待片刻再重新載入紀錄，讓後端有時間寫入
+            setTimeout(() => { loadHistory(); }, 2000);
         } catch (err) { alert("❌ 傳送失敗，請檢查網路！"); } 
         finally { submitBtn.disabled = false; submitBtn.innerText = "✅ 提交今日練習"; }
     });
 
-    // 讀取並顯示歷史紀錄
+    // 【核心美化】讀取並顯示歷史紀錄
     function loadHistory() {
         const historyList = document.getElementById('historyList'), statsDashboard = document.getElementById('statsDashboard');
         const statDays = document.getElementById('statDays'), statMinutes = document.getElementById('statMinutes');
-        historyList.innerHTML = '<div class="no-records">🔄 正在載入...</div>';
+        historyList.innerHTML = '<div class="no-records">🔄 正在載入歷史練習紀錄...</div>';
+        
         fetch(GAS_WEB_APP_URL + "?action=getHistory")
             .then(res => res.json())
             .then(data => {
                 if (data.result === "success" && data.history.length > 0) {
                     historyList.innerHTML = '';
                     let totalMinutes = 0; const uniqueDays = new Set();
-                    data.history.reverse().forEach(rec => {
-                        const item = document.createElement('div'); item.className = 'history-item';
-                        const [practiceDate, studentName, ratingStars, practiceMins] = [rec[3], rec[2], rec[6], rec[4]];
-                        item.innerHTML = `<div><strong>${practiceDate}</strong> - ${studentName}</div><div class="history-stars">${ratingStars || ''}</div>`;
+                    
+                    data.history.reverse().forEach(record => {
+                        const item = document.createElement('div');
+                        item.className = 'history-item';
+                        
+                        // 【修正】按照 Apps Script 回傳的正確順序解析欄位
+                        // record[0]=A欄, record[1]=B欄, record[2]=C欄...
+                        const className = record[1] || 'N/A';
+                        const studentName = record[2] || '匿名';
+                        const practiceDate = record[3] || '未知日期';
+                        const practiceMins = record[4] || 0;
+                        const ratingStars = record[6] || '';
+                        
+                        // 建立更豐富的顯示內容
+                        item.innerHTML = `
+                            <div>
+                                <strong>${practiceDate}</strong>
+                                <span style="margin-left: 10px;">${className} - ${studentName}</span>
+                            </div>
+                            <div class="history-stars">${ratingStars}</div>
+                        `;
                         historyList.appendChild(item);
-                        totalMinutes += parseInt(practiceMins) || 0; uniqueDays.add(practiceDate);
+                        
+                        // 計算統計數據
+                        totalMinutes += parseInt(practiceMins) || 0;
+                        uniqueDays.add(practiceDate);
                     });
+                    
+                    // 更新統計儀表板
                     statsDashboard.style.display = 'flex';
-                    statDays.innerText = uniqueDays.size; statMinutes.innerText = totalMinutes;
-                } else { historyList.innerHTML = '<div class="no-records">😢 尚未有練習紀錄。</div>'; }
+                    statDays.innerText = uniqueDays.size;
+                    statMinutes.innerText = totalMinutes;
+                } else {
+                    historyList.innerHTML = '<div class="no-records">😢 尚未有任何練習紀錄。</div>';
+                }
             })
-            .catch(err => { historyList.innerHTML = '<div class="no-records">❌ 讀取失敗！</div>'; });
+            .catch(err => {
+                historyList.innerHTML = '<div class="no-records">❌ 讀取紀錄失敗，請稍後再試。</div>';
+                console.error("讀取歷史紀錄時發生錯誤:", err);
+            });
     }
-    document.addEventListener('DOMContentLoaded', loadHistory);
+    // 頁面載入時，自動執行讀取功能
+    document.addEventListener('DOMContentLoaded', loadHistory);           
 </script>
 </body>
 </html>
