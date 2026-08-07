@@ -5,73 +5,49 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>🎵 牧童笛星級小大師 - 練習紀錄系統</title>
     <style>
-        :root {
-            --primary: #2c7a7b; --primary-light: #e6fffa; --secondary: #d69e2e; --secondary-light: #fefcbf;
-            --dark: #2d3748; --light: #f7fafc; --white: #ffffff; --success: #38a169; --error: #e53e3e;
-            --warning-bg: #fffaf0; --warning-border: #fbd38d;
-        }
-        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Microsoft JhengHei", sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background-color: #f0f7f6; margin: 0; padding: 15px; color: var(--dark); }
-        .app-container { max-width: 1000px; margin: 0 auto; }
-        header { text-align: center; margin-bottom: 20px; }
-        header h1 { color: var(--primary); margin: 5px 0; font-size: 2rem; }
-        header p { color: #718096; margin: 0; }
-        .grid-layout { display: grid; grid-template-columns: 1fr; gap: 20px; }
-        @media (min-width: 768px) { .grid-layout { grid-template-columns: 1.2fr 1fr; } }
-        .card { background: var(--white); border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); padding: 20px; }
-        .card-title { color: var(--primary); font-size: 1.25rem; margin: 0 0 18px 0; display: flex; align-items: center; gap: 8px; border-bottom: 2px solid var(--primary-light); padding-bottom: 10px; }
+        :root { --primary: #2c7a7b; --primary-light: #e6fffa; --secondary: #d69e2e; --dark: #2d3748; --light: #f7fafc; --white: #ffffff; --success: #38a169; --error: #e53e3e; }
+        body { background-color: #f0f7f6; margin: 0; padding: 15px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Microsoft JhengHei", sans-serif; }
+        .app-container { max-width: 800px; margin: 0 auto; }
+        .card { background: var(--white); border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); padding: 20px; margin-bottom: 20px;}
+        .card-title { color: var(--primary); font-size: 1.25rem; margin: 0 0 18px 0; border-bottom: 2px solid var(--primary-light); padding-bottom: 10px; }
         .form-group { margin-bottom: 18px; }
         .form-row { display: flex; gap: 12px; }
         .form-row .form-group { flex: 1; }
-        label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 0.95rem; }
-        input[type="text"], input[type="number"], textarea { width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 1rem; transition: all 0.3s; outline: none; background-color: var(--light); }
-        input:focus, textarea:focus { border-color: var(--primary); background-color: var(--white); box-shadow: 0 0 0 3px rgba(44, 122, 123, 0.15); }
-        input[readonly] { background-color: #edf2f7; cursor: not-allowed; }
-        .star-rating { display: flex; flex-direction: row-reverse; justify-content: flex-end; gap: 8px; }
+        label { display: block; font-weight: 600; margin-bottom: 8px; }
+        input[type="text"], input[type="number"], textarea { width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 1rem; outline: none; }
+        input[readonly] { background-color: #edf2f7; }
+        .star-rating { display: flex; flex-direction: row-reverse; justify-content: flex-end; }
         .star-rating input { display: none; }
-        .star-rating label { font-size: 36px; color: #cbd5e0; cursor: pointer; transition: color 0.15s ease-in-out; margin: 0; }
+        .star-rating label { font-size: 36px; color: #cbd5e0; cursor: pointer; }
         .star-rating input:checked ~ label, .star-rating label:hover, .star-rating label:hover ~ label { color: #f6e05e; }
-        .recorder-box { background: #ebf8fa; border: 2px dashed #b2f5ea; border-radius: 12px; padding: 18px; text-align: center; margin-bottom: 20px; }
-        .recorder-status { font-weight: bold; color: var(--primary); margin-bottom: 12px; display: flex; align-items: center; justify-content: center; gap: 6px; }
-        .btn-group { display: flex; gap: 10px; justify-content: center; margin-bottom: 12px; }
-        button { padding: 12px 20px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; font-size: 1rem; }
+        .recorder-box { background: #ebf8fa; border-radius: 12px; padding: 18px; text-align: center; }
+        button { padding: 12px 20px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 1rem; }
         .btn-record { background-color: var(--error); color: var(--white); }
         .btn-stop { background-color: #4a5568; color: var(--white); }
-        .btn-submit { background-color: var(--primary); color: var(--white); width: 100%; padding: 14px; font-size: 1.1rem; justify-content: center; border-radius: 10px; }
-        button:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-submit { background-color: var(--primary); color: var(--white); width: 100%; padding: 14px; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
         audio { width: 100%; margin-top: 8px; }
-        .history-card { margin-top: 20px; }
-        .stats-dashboard { display: none; gap: 10px; margin-bottom: 18px; background: var(--primary-light); padding: 12px; border-radius: 12px; justify-content: space-around; text-align: center; border: 1px solid #b2f5ea;}
-        .stat-item { flex: 1; }
-        .stat-val { font-size: 1.6rem; font-weight: bold; color: var(--primary); }
-        .stat-lbl { font-size: 0.8rem; color: #4a5568; font-weight: 600; }
-        .history-list { margin-top: 12px; max-height: 350px; overflow-y: auto; padding-right: 5px;}
-        .history-item { background: var(--light); border-left: 4px solid var(--primary); padding: 12px 14px; border-radius: 0 8px 8px 0; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .history-stars { color: #f6e05e; font-size: 1.1rem; }
-        .no-records { text-align: center; color: #a0aec0; padding: 20px 0; }
+        .history-list { max-height: 400px; overflow-y: auto; }
+        .history-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #e2e8f0; }
+        .no-records { text-align: center; color: #a0aec0; padding: 20px; }
     </style>
 </head>
 <body>
-
 <div class="app-container">
-    <header>
-        <h1>🎵 牧童笛星級小大師</h1>
-        <p>持之以恆，每天練習 5 分鐘，成為笛藝大師！</p>
-    </header>
     <div class="card">
         <h3 class="card-title">📝 今日練習登記</h3>
         <form id="recordForm">
             <div class="form-row">
-                <div class="form-group"><label for="className">🏫 班別</label><input type="text" id="className" placeholder="例如：4A" required></div>
-                <div class="form-group"><label for="studentName">👤 學生姓名</label><input type="text" id="studentName" placeholder="例如：陳大文" required></div>
+                <div class="form-group"><label for="className">🏫 班別</label><input type="text" id="className" required></div>
+                <div class="form-group"><label for="studentName">👤 學生姓名</label><input type="text" id="studentName" required></div>
             </div>
             <div class="form-group"><label>📅 練習日期</label><input type="text" id="todayDate" readonly></div>
-            <div class="form-group"><label for="practiceTime">⏱️ 練習時間 (分鐘)</label><input type="number" id="practiceTime" min="5" placeholder="最少 5 分鐘" required></div>
-            <div class="form-group"><label for="practiceContent">📝 練習內容</label><textarea id="practiceContent" rows="3" placeholder="例如：吹奏 C4-C5 音階" required></textarea></div>
+            <div class="form-group"><label for="practiceTime">⏱️ 練習時間 (分鐘)</label><input type="number" id="practiceTime" min="1" required></div>
+            <div class="form-group"><label for="practiceContent">📝 練習內容</label><textarea id="practiceContent" rows="2" required></textarea></div>
             <div class="recorder-box">
-                <div class="recorder-status"><span>🎙️ 錄下我的演奏 (選填)</span></div>
-                <div class="btn-group">
-                    <button type="button" id="startBtn" class="btn-record">🔴 開始錄音</button>
+                <div>🎙️ 錄下我的演奏 (選填)</div>
+                <div style="display:flex; gap: 10px; justify-content: center; margin: 10px 0;">
+                    <button type="button" id="startBtn" class="btn-record">🔴 開始</button>
                     <button type="button" id="stopBtn" class="btn-stop" disabled>⏹️ 停止</button>
                 </div>
                 <audio id="audioPlayback" controls></audio>
@@ -89,35 +65,35 @@
             <button type="submit" class="btn-submit">✅ 提交今日練習</button>
         </form>
     </div>
-    <div class="card history-card">
+    <div class="card">
         <h3 class="card-title">🏆 我的練習歷史紀錄</h3>
-        <div id="statsDashboard" class="stats-dashboard"><div class="stat-item"><div class="stat-val" id="statDays">0</div><div class="stat-lbl">📆 累計練習天數</div></div><div class="stat-item"><div class="stat-val" id="statMinutes">0</div><div class="stat-lbl">⏱️ 累計練習分鐘</div></div></div>
         <div id="historyList" class="history-list"></div>
     </div>
 </div>
 
 <script>
     // #############################################
-    // ##            請在這裡貼上您的              ##
-    // ##      Google Apps Script 部署網址        ##
+    // ##        牧童笛紀錄系統 - 最終版 v5.0       ##
     // #############################################
-    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwHqDAwZ83kL2TsD-VGf0p1u6TmeR1QWW7HIQl_0LkQYLTkHeCjOiYqJhfIpelRlrTVyA/exec";
+
+    // --- 1. 您的 Apps Script 部署網址 (已更新) ---
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzWLtyVTK0t-nUHgFuEVqTMdhqJ1dN3agESUHHioY5O92-ABxLt34QXiKJAikkqeWAGVw/exec";
     
-    // --- 以下為主要程式 v3.0 (最終美化版)，請勿修改 ---
+    // --- 2. 自動填入今天日期 ---
     const today = new Date();
     const dateStr = `${today.getFullYear()}年${String(today.getMonth() + 1).padStart(2, '0')}月${String(today.getDate()).padStart(2, '0')}日`;
     document.getElementById('todayDate').value = dateStr;
 
-    // 錄音功能
-    let mediaRecorder = null, audioChunks = [], recordedAudioBlob = null;
+    // --- 3. 錄音功能 ---
+    let mediaRecorder, audioChunks = [], recordedAudioBlob;
     const startBtn = document.getElementById('startBtn'), stopBtn = document.getElementById('stopBtn'), audioPlayback = document.getElementById('audioPlayback');
+    
     startBtn.addEventListener('click', async () => {
-        if (!navigator.mediaDevices) { alert("瀏覽器不支援錄音功能。"); return; }
         try {
-            audioChunks = []; recordedAudioBlob = null;
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            audioChunks = [];
             mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
-            mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
+            mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
             mediaRecorder.onstop = () => {
                 recordedAudioBlob = new Blob(audioChunks, { type: 'audio/webm' });
                 audioPlayback.src = URL.createObjectURL(recordedAudioBlob);
@@ -125,95 +101,86 @@
             };
             mediaRecorder.start();
             startBtn.disabled = true; stopBtn.disabled = false;
-        } catch (err) { alert("無法存取麥克風，請檢查瀏覽器權限！"); }
+        } catch (err) { alert("無法存取麥克風，請檢查瀏覽器權限。"); }
     });
-    stopBtn.addEventListener('click', () => { if (mediaRecorder) { mediaRecorder.stop(); startBtn.disabled = false; stopBtn.disabled = true; startBtn.innerText = "🔄 重新錄音"; }});
 
-    // Base64 轉換
-    function blobToBase64(blob) { return new Promise((resolve, reject) => { const reader = new FileReader(); reader.onloadend = () => resolve(reader.result.split(',')[1]); reader.onerror = reject; reader.readAsDataURL(blob); }); }
+    stopBtn.addEventListener('click', () => {
+        if (mediaRecorder) { mediaRecorder.stop(); startBtn.disabled = false; stopBtn.disabled = true; }
+    });
 
-    // 表單提交
-    document.getElementById('recordForm').addEventListener('submit', async (e) => {
+    // --- 4. 表單提交功能 (POST) ---
+    const form = document.getElementById('recordForm');
+    form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const submitBtn = e.target.querySelector('.btn-submit');
-        const ratingInput = document.querySelector('input[name="rating"]:checked');
-        if (!ratingInput) { alert("請自評今天表現！"); return; }
+        const submitBtn = form.querySelector('.btn-submit');
         submitBtn.disabled = true; submitBtn.innerText = "⏳ 傳送中...";
+
+        let audioBase64 = null;
+        if (recordedAudioBlob) {
+            audioBase64 = await new Promise(resolve => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result.split(',')[1]);
+                reader.readAsDataURL(recordedAudioBlob);
+            });
+        }
+        
+        const payload = {
+            className: form.className.value, studentName: form.studentName.value, date: dateStr,
+            duration: form.practiceTime.value, content: form.practiceContent.value,
+            rating: form.rating.value, audioBase64: audioBase64, mimeType: 'audio/webm'
+        };
+
         try {
-            let base64Audio = null, mimeType = null;
-            if (recordedAudioBlob) { base64Audio = await blobToBase64(recordedAudioBlob); mimeType = recordedAudioBlob.type; }
-            const payload = {
-                className: document.getElementById('className').value, studentName: document.getElementById('studentName').value,
-                date: dateStr, duration: parseInt(document.getElementById('practiceTime').value), content: document.getElementById('practiceContent').value,
-                rating: parseInt(ratingInput.value), audioBase64: base64Audio, mimeType: mimeType
-            };
-            // 使用 no-cors 模式，因為 Apps Script 的簡單回應無法處理 CORS preflight
-            await fetch(GAS_WEB_APP_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
-            alert("🎉 提交成功！紀錄將在一分鐘後更新。");
-            e.target.reset();
-            audioPlayback.src = '';
-            recordedAudioBlob = null;
-            // 提交成功後，稍待片刻再重新載入紀錄，讓後端有時間寫入
-            setTimeout(() => { loadHistory(); }, 2000);
-        } catch (err) { alert("❌ 傳送失敗，請檢查網路！"); } 
-        finally { submitBtn.disabled = false; submitBtn.innerText = "✅ 提交今日練習"; }
+            const response = await fetch(GAS_WEB_APP_URL, {
+                method: 'POST',
+                body: JSON.stringify(payload),
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const result = await response.json();
+
+            if (result.result === "success") {
+                alert("🎉 提交成功！");
+                form.reset(); audioPlayback.src = ''; recordedAudioBlob = null;
+                loadHistory(); // 成功後立即刷新歷史紀錄
+            } else {
+                throw new Error(result.message || "未知的後端錯誤");
+            }
+        } catch (err) {
+            alert(`❌ 傳送失敗，請稍後再試。\n錯誤訊息: ${err.message}`);
+        } finally {
+            submitBtn.disabled = false; submitBtn.innerText = "✅ 提交今日練習";
+        }
     });
 
-    // 【核心美化】讀取並顯示歷史紀錄
+    // --- 5. 讀取歷史紀錄功能 (GET) ---
     function loadHistory() {
-        const historyList = document.getElementById('historyList'), statsDashboard = document.getElementById('statsDashboard');
-        const statDays = document.getElementById('statDays'), statMinutes = document.getElementById('statMinutes');
-        historyList.innerHTML = '<div class="no-records">🔄 正在載入歷史練習紀錄...</div>';
-        
-        fetch(GAS_WEB_APP_URL + "?action=getHistory")
+        const historyList = document.getElementById('historyList');
+        historyList.innerHTML = '<div class="no-records">🔄 載入中...</div>';
+        // 在網址後加上參數，明確告知後端要 "讀取"
+        fetch(`${GAS_WEB_APP_URL}?action=getHistory`)
             .then(res => res.json())
             .then(data => {
                 if (data.result === "success" && data.history.length > 0) {
                     historyList.innerHTML = '';
-                    let totalMinutes = 0; const uniqueDays = new Set();
-                    
-                    data.history.reverse().forEach(record => {
+                    data.history.reverse().forEach(rec => {
                         const item = document.createElement('div');
                         item.className = 'history-item';
-                        
-                        // 【修正】按照 Apps Script 回傳的正確順序解析欄位
-                        // record[0]=A欄, record[1]=B欄, record[2]=C欄...
-                        const className = record[1] || 'N/A';
-                        const studentName = record[2] || '匿名';
-                        const practiceDate = record[3] || '未知日期';
-                        const practiceMins = record[4] || 0;
-                        const ratingStars = record[6] || '';
-                        
-                        // 建立更豐富的顯示內容
-                        item.innerHTML = `
-                            <div>
-                                <strong>${practiceDate}</strong>
-                                <span style="margin-left: 10px;">${className} - ${studentName}</span>
-                            </div>
-                            <div class="history-stars">${ratingStars}</div>
-                        `;
+                        // rec[1] = B欄(班別), rec[2] = C欄(姓名), rec[3] = D欄(日期), rec[6] = G欄(星級)
+                        item.innerHTML = `<span>${rec[3]} - ${rec[1]} ${rec[2]}</span><span>${rec[6]}</span>`;
                         historyList.appendChild(item);
-                        
-                        // 計算統計數據
-                        totalMinutes += parseInt(practiceMins) || 0;
-                        uniqueDays.add(practiceDate);
                     });
-                    
-                    // 更新統計儀表板
-                    statsDashboard.style.display = 'flex';
-                    statDays.innerText = uniqueDays.size;
-                    statMinutes.innerText = totalMinutes;
                 } else {
-                    historyList.innerHTML = '<div class="no-records">😢 尚未有任何練習紀錄。</div>';
+                    historyList.innerHTML = '<div class="no-records">😢 尚未有紀錄。</div>';
                 }
             })
             .catch(err => {
-                historyList.innerHTML = '<div class="no-records">❌ 讀取紀錄失敗，請稍後再試。</div>';
+                historyList.innerHTML = '<div class="no-records">❌ 讀取失敗，請檢查 Apps Script 部署權限。</div>';
                 console.error("讀取歷史紀錄時發生錯誤:", err);
             });
     }
-    // 頁面載入時，自動執行讀取功能
-    document.addEventListener('DOMContentLoaded', loadHistory);           
+
+    // --- 6. 頁面載入時，自動執行讀取功能 ---
+    document.addEventListener('DOMContentLoaded', loadHistory);
 </script>
 </body>
 </html>
