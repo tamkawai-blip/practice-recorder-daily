@@ -467,7 +467,17 @@
             <h3 class="card-title">📝 今日練習登記</h3>
 
             <form id="recordForm">
-                <div class="form-group">
+             <div class="form-row">
+            <div class="form-group">
+                <label for="className">🏫 班別</label>
+                <input type="text" id="className" placeholder="例如：4A" required>
+            </div>
+            <div class="form-group">
+                <label for="studentName">👤 學生姓名</label>
+                <input type="text" id="studentName" placeholder="例如：陳大文" required>
+            </div>
+        </div>
+ <div class="form-group">
                     <label>📅 練習日期 (系統自動填寫)</label>
                     <input type="text" id="todayDate" readonly>
                     <div class="input-hint">⚠️ 每天只可提交當天紀錄，不可補填或提早填寫。</div>
